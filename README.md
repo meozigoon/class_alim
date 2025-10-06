@@ -55,12 +55,25 @@ vercel.json                   # Vercel 설정 (region 등)
         "subject": "영어",
         "date": "2025-06-15",
         "description": "News article presentation"
+    },
+    {
+        "title": "국어 수행평가",
+        "subject": "국어",
+        "date": "2025-08-10 ~ 2025-08-14",
+        "description": "작문 실기"
+    },
+    {
+        "title": "역사 퀴즈",
+        "subject": "역사",
+        "date": "2025-09-01 이전",
+        "description": "한국사 기말 대비 퀴즈"
     }
 ]
 ```
 
--   `date`는 `YYYY-MM-DD` 형식 권장 (유연한 파싱 지원)
--   `subject`는 선택 사항이며, 응답에 `[과목]` 형태로 표기됩니다.
+-   `date`는 `YYYY-MM-DD` 기본 형식을 권장하며, `YYYY-MM-DD ~ YYYY-MM-DD`(기간)이나 `YYYY-MM-DD 이전` 형태도 지원합니다.
+-   기간은 `시작일 ~ 종료일 사이`로, `이전` 키워드는 `종료일 이전`으로 응답에 표시됩니다.
+-   `subject`는 선택 사항이며 응답에 `[과목]` 형태로 표기됩니다.
 -   `description`은 선택 사항으로 세부 내용을 한 줄 더 보여줍니다.
 
 ### D-Day JSON 편집 (`data/dday.json`)

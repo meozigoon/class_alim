@@ -1,7 +1,12 @@
 {
+    "version": 2,
     "functions": {
-        "api/**/*.js": {
-            "runtime": "nodejs20.x"
+        "api/*.js": {
+            "includeFiles": "data/customEvents.json"
         }
-    }
+    },
+    "rewrites": [
+        { "source": "/kakao", "destination": "/api/kakao" },
+        { "source": "/health", "destination": "/api/health" }
+    ]
 }

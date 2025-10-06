@@ -19,13 +19,13 @@ import {
 } from "./responseBuilder.js";
 
 const QUICK_REPLY_ITEMS = [
-    { label: "오늘 급식", messageText: "오늘 급식 알려줘" },
-    { label: "내일 급식", messageText: "내일 급식 알려줘" },
-    { label: "오늘 시간표", messageText: "오늘 시간표 알려줘" },
-    { label: "내일 시간표", messageText: "내일 시간표 알려줘" },
-    { label: "학사 일정", messageText: "학사 일정 알려줘" },
-    { label: "수행평가", messageText: "수행평가 일정 알려줘" },
-    { label: "디데이", messageText: "디데이 알려줘" },
+    { label: "오늘 급식", messageText: "오늘 급식" },
+    { label: "내일 급식", messageText: "내일 급식" },
+    { label: "오늘 시간표", messageText: "오늘 시간표" },
+    { label: "내일 시간표", messageText: "내일 시간표" },
+    { label: "학사 일정", messageText: "학사 일정" },
+    { label: "수행평가", messageText: "수행평가" },
+    { label: "디데이", messageText: "디데이" },
 ];
 
 const formatMealText = (mealTypeText, targetDate, meals) => {
@@ -160,7 +160,7 @@ const handleAssessments = async () => {
 
     if (!assessments.length) {
         return buildSimpleTextResponse(
-            "등록된 수행평가 일정이 없습니다. data/performanceAssessments.json 파일을 확인해 주세요.",
+            "등록된 수행평가 일정이 없습니다.",
             buildQuickReplies(QUICK_REPLY_ITEMS)
         );
     }
@@ -185,7 +185,7 @@ const handleDday = async () => {
     const upcoming = getUpcomingDday();
     if (!upcoming) {
         return buildSimpleTextResponse(
-            "앞으로 남은 디데이가 없어요. data/dday.json 파일을 확인해 주세요.",
+            "앞으로 남은 디데이가 없습니다.",
             buildQuickReplies(QUICK_REPLY_ITEMS)
         );
     }
@@ -197,7 +197,7 @@ const handleDday = async () => {
 
 const DEFAULT_HANDLER = () =>
     buildSimpleTextResponse(
-        "요청을 이해하지 못했어요. 오늘/내일 급식, 오늘/내일 시간표, 학사 일정, 수행평가 일정, 디데이를 요청해 주세요.",
+        "요청을 이해하지 못했어요. 메시지를 다시 확인해 주세요.",
         buildQuickReplies(QUICK_REPLY_ITEMS)
     );
 

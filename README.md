@@ -1,12 +1,12 @@
 ﻿# Kakao Class 알림 API
 
-카카오 챗봇 스킬에서 사용할 급식, 학사 일정, 수행평가, 디데이 정보를 제공하는 서버리스 API입니다. Vercel에 배포하여 카카오 i 오픈빌더와 연동하도록 구성했습니다.
+카카오 챗봇 스킬에서 사용할 급식, 시간표, 학사 일정, 수행평가, 디데이 정보를 제공하는 서버리스 API입니다. Vercel에 배포하여 카카오 i 오픈빌더와 연동하도록 구성했습니다.
 
 ## 기술 스택
 
 -   Node.js 20 (ES Module)
 -   Vercel Serverless Functions (`api/kakao.js`)
--   NEIS Open API (급식 · 학사 일정)
+-   NEIS Open API (급식 · 시간표 · 학사 일정)
 -   JSON 설정(`data/dday.json`, `data/performanceAssessments.json`) 기반 일정 관리
 
 ## 프로젝트 구조
@@ -45,6 +45,7 @@ vercel.json                   # Vercel 설정 (region 등)
 1. [NEIS 오픈 API 포털](https://open.neis.go.kr/) → 공통서비스 → 학교기본정보 조회 API 활용
 2. `ATPT_OFCDC_SC_CODE` (교육청), `SD_SCHUL_CODE` (학교) 값을 확인
 3. 급식/학사 일정 API는 동일한 코드 조합을 사용합니다.
+4. 학급 시간표 조회를 사용하려면 학년(`GRADE`), 반(`CLASS_NM`) 정보를 확인해 주세요.
 
 ### 수행평가 JSON 편집 (`data/performanceAssessments.json`)
 
@@ -129,6 +130,15 @@ curl -X POST http://localhost:3000/api/kakao \
       }'
 ```
 
+```bash
+curl -X POST http://localhost:3000/api/kakao \
+  -H "Content-Type: application/json" \
+  -d '{
+        "intent": { "name": "TimetableIntent" },
+        "action": { "params": { "skill": "timetable", "timetableType": "today" } }
+      }'
+```
+
 ## 배포 (Vercel)
 
 1. `vercel login`
@@ -137,6 +147,8 @@ curl -X POST http://localhost:3000/api/kakao \
     - `NEIS_API_KEY`
     - `NEIS_EDU_OFFICE_CODE`
     - `NEIS_SCHOOL_CODE`
+    - `NEIS_CLASS_GRADE`
+    - `NEIS_CLASS_NAME`
 4. `vercel env pull` 로컬 동기화(선택)
 5. 배포 후 API URL: `https://{project}.vercel.app/api/kakao`
 
@@ -196,3 +208,11 @@ curl -X POST http://localhost:3000/api/kakao \
 -   NEIS API 호출 제한이 있으므로 다중 호출 시 캐싱을 추가하고 싶다면 `src/services/neisService.js`에 캐시 레이어를 얹어주세요.
 
 행복한 챗봇 개발 되세요!
+
+
+
+
+
+
+
+

@@ -124,3 +124,43 @@ export const getMonthlySchedule = async (fromDate, toDate) => {
         description: row.CONTENT || row.EVENT_CNTNT || "",
     }));
 };
+
+const sanitizeTimetableEntry = (row) => {
+    const period = Number.parseInt(row.PERIO, 10);
+    const subject = (
+        row.ITRT_CNTNT ||
+        row.SUBJECT_NM ||
+        row.CONTENT ||
+        ""
+    ).trim();
+    const teacher = (row.TEACHER_NM || row.TCH_NM || "").trim();
+    const classroom = (row.CLRM_NM || "").trim();
+
+    return {
+        date: row.ALL_TI_YMD,
+        period: Number.isFinite(period) ? period : null,
+        subject: subject || "시간표 정보 없음",
+        teacher,
+        classroom,
+    };
+};
+
+export const getClassTimetableByDate = async (date) => {
+    const rows = await requestNeis("classTimeTable", {
+        KEY: neisConfig.apiKey(),
+        Type: "json",
+        pIndex: 1,
+        pSize: 100,
+        ATPT_OFCDC_SC_CODE: neisConfig.eduOfficeCode(),
+        SD_SCHUL_CODE: neisConfig.schoolCode(),
+        GRADE: neisConfig.classGrade(),
+        CLASS_NM: neisConfig.className(),
+        TI_FROM_YMD: formatToNeisDate(date),
+        TI_TO_YMD: formatToNeisDate(date),
+    });
+
+    return rows
+        .map(sanitizeTimetableEntry)
+        .filter((item) => item.period !== null)
+        .sort((a, b) => a.period - b.period);
+};

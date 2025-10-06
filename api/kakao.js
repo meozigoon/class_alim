@@ -1,16 +1,23 @@
-import app from "../src/app.js";
+﻿import { handleSkillRequest } from "../src/kakao/skillController.js";
+import { buildErrorResponse } from "../src/kakao/responseBuilder.js";
 
-export const config = {
-    api: {
-        bodyParser: false,
-    },
-};
+export default async function handler(req, res) {
+    if (req.method !== "POST") {
+        res.status(405).json({ error: "Method Not Allowed" });
+        return;
+    }
 
-export default (req, res) => {
-    const queryStringIndex = req.url.indexOf("?");
-    req.url =
-        queryStringIndex >= 0
-            ? `/kakao${req.url.slice(queryStringIndex)}`
-            : "/kakao";
-    return app(req, res);
-};
+    try {
+        const body =
+            typeof req.body === "string" && req.body.length
+                ? JSON.parse(req.body)
+                : req.body ?? {};
+
+        const response = await handleSkillRequest(body);
+        res.status(200).json(response);
+    } catch (error) {
+        console.error("Kakao skill handler error:", error);
+        const response = buildErrorResponse(error.message ?? "Unknown error");
+        res.status(500).json(response);
+    }
+}

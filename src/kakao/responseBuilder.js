@@ -1,8 +1,23 @@
-const buildQuickReply = ({ label, action = "message", messageText }) => ({
-    label,
-    action,
-    messageText: messageText ?? label,
-});
+﻿export const buildQuickReplies = (items = []) =>
+    items.filter(Boolean).map((item) => {
+        const reply = {
+            label: item.label,
+            action: item.action ?? "message",
+        };
+
+        if (reply.action === "block" && item.blockId) {
+            reply.blockId = item.blockId;
+            reply.messageText = item.messageText ?? item.label;
+        } else {
+            reply.messageText = item.messageText ?? item.label;
+        }
+
+        if (item.extra) {
+            reply.extra = item.extra;
+        }
+
+        return reply;
+    });
 
 export const buildSimpleTextResponse = (text, quickReplies = []) => ({
     version: "2.0",
@@ -14,12 +29,11 @@ export const buildSimpleTextResponse = (text, quickReplies = []) => ({
                 },
             },
         ],
-        quickReplies: quickReplies.map(buildQuickReply),
+        quickReplies,
     },
 });
 
 export const buildErrorResponse = (message) =>
-    buildSimpleTextResponse(message, [
-        { label: "도움말", messageText: "도움말" },
-        { label: "오늘 급식", messageText: "오늘 급식 알려줘" },
-    ]);
+    buildSimpleTextResponse(
+        `요청을 처리하는 중 문제가 발생했어요. 잠시 후 다시 시도해 주세요.\n(${message})`
+    );

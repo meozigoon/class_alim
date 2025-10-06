@@ -1,12 +1,4 @@
 {
-    "version": 2,
-    "functions": {
-        "api/*.js": {
-            "includeFiles": "data/customEvents.json"
-        }
-    },
-    "rewrites": [
-        { "source": "/kakao", "destination": "/api/kakao" },
-        { "source": "/health", "destination": "/api/health" }
-    ]
+    "regions": ["icn1"],
+    "framework": null
 }

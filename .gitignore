@@ -1,7 +1,12 @@
-node_modules/
+﻿node_modules/
 .env
-.env.*
-!.env.example
 .vercel
+npm-debug.log*
 
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
 .vercel
+.env*.local

@@ -1,47 +1,61 @@
-import dayjs from "dayjs";
-import "dayjs/locale/ko.js";
-import utc from "dayjs/plugin/utc.js";
-import timezone from "dayjs/plugin/timezone.js";
-import weekday from "dayjs/plugin/weekday.js";
+﻿import { formatInTimeZone, toZonedTime } from "date-fns-tz";
+import { parse, isAfter, compareAsc, addDays } from "date-fns";
+import { ko } from "date-fns/locale";
 
-import config from "../config.js";
+export const KST_TIMEZONE = "Asia/Seoul";
 
-dayjs.extend(utc);
-dayjs.extend(timezone);
-dayjs.extend(weekday);
-dayjs.locale("ko");
+export const formatToNeisDate = (date) =>
+    formatInTimeZone(date, KST_TIMEZONE, "yyyyMMdd");
+export const formatToKoreanLongDate = (date) =>
+    formatInTimeZone(date, KST_TIMEZONE, "M월 d일 (EEE)", { locale: ko });
+export const formatToKoreanShortDate = (date) =>
+    formatInTimeZone(date, KST_TIMEZONE, "M월 d일", { locale: ko });
+export const formatToIsoDate = (date) =>
+    formatInTimeZone(date, KST_TIMEZONE, "yyyy-MM-dd");
 
-export const toZonedDayjs = (value) => {
+export const getKstToday = () => {
+    const now = toZonedTime(new Date(), KST_TIMEZONE);
+    now.setHours(0, 0, 0, 0);
+    return now;
+};
+
+export const getKstDateByOffset = (offsetDays = 0) =>
+    addDays(getKstToday(), offsetDays);
+
+const DATE_FORMAT_CANDIDATES = [
+    "yyyyMMdd",
+    "yyyy-MM-dd",
+    "yyyy.M.d",
+    "yyyy.MM.dd",
+    "yyyy/M/d",
+    "yyyy/M/dd",
+    "yyyy년 M월 d일",
+];
+
+export const parseFlexibleDate = (value) => {
     if (!value) {
-        return dayjs().tz(config.defaultTimezone);
+        return null;
     }
-
-    const candidate = dayjs(value);
-    return candidate.isValid()
-        ? candidate.tz(config.defaultTimezone)
-        : dayjs().tz(config.defaultTimezone);
-};
-
-export const formatNeisDate = (value) => toZonedDayjs(value).format("YYYYMMDD");
-
-export const formatDisplayDate = (value) =>
-    toZonedDayjs(value).format("YYYY년 M월 D일 (ddd)");
-
-export const formatDisplayRange = (start, end) => {
-    const startDate = toZonedDayjs(start);
-    const endDate = toZonedDayjs(end);
-
-    if (!end || endDate.isSame(startDate, "day")) {
-        return formatDisplayDate(startDate);
+    for (const fmt of DATE_FORMAT_CANDIDATES) {
+        const parsed = parse(String(value).trim(), fmt, new Date());
+        if (!Number.isNaN(parsed?.getTime())) {
+            return parsed;
+        }
     }
-
-    return `${startDate.format("YYYY년 M월 D일 (ddd)")} ~ ${endDate.format(
-        "M월 D일 (ddd)"
-    )}`;
+    const fallback = new Date(value);
+    if (!Number.isNaN(fallback?.getTime())) {
+        return fallback;
+    }
+    return null;
 };
 
-export const getSemesterByMonth = (month) => {
-    return month >= 3 && month <= 8 ? "1" : "2";
-};
+export const sortByDate = (items, selector) =>
+    [...items].sort((a, b) => compareAsc(selector(a), selector(b)));
 
-export default dayjs;
+export const isFutureOrToday = (date, reference = new Date()) => {
+    const ref = new Date(reference);
+    ref.setHours(0, 0, 0, 0);
+    const target = new Date(date);
+    target.setHours(0, 0, 0, 0);
+    return !isAfter(ref, target);
+};

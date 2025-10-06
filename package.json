@@ -1,33 +1,17 @@
 {
     "name": "class_alim",
     "version": "1.0.0",
-    "description": "KakaoTalk chatbot server for school information",
-    "main": "index.js",
-    "scripts": {
-        "test": "echo \"Error: no test specified\" && exit 1",
-        "start": "node src/index.js",
-        "dev": "nodemon src/index.js"
-    },
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/meozigoon/class_alim.git"
-    },
-    "keywords": [],
-    "author": "",
-    "license": "ISC",
+    "description": "Kakao i Chatbot skills API for school meals, schedules, and D-day.",
     "type": "module",
-    "bugs": {
-        "url": "https://github.com/meozigoon/class_alim/issues"
+    "scripts": {
+        "test": "node --test"
     },
-    "homepage": "https://github.com/meozigoon/class_alim#readme",
+    "engines": {
+        "node": ">=20"
+    },
     "dependencies": {
-        "axios": "^1.12.2",
-        "dayjs": "^1.11.18",
-        "dotenv": "^17.2.3",
-        "express": "^5.1.0",
-        "node-cache": "^5.1.2"
-    },
-    "devDependencies": {
-        "nodemon": "^3.1.10"
+        "date-fns": "^4.1.0",
+        "date-fns-tz": "^3.2.0",
+        "dotenv": "^17.2.3"
     }
 }

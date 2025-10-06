@@ -1,274 +1,177 @@
-import crypto from "crypto";
-
-import config from "../config.js";
+﻿import { getMealsByDate, getMonthlySchedule } from '../services/neisService.js';
+import { getPerformanceAssessments } from '../services/assessmentService.js';
+import { getUpcomingDday } from '../services/ddayService.js';
+import { getAllergyListText } from '../services/allergyService.js';
 import {
-    buildAssessmentMessage,
-    buildExamMessage,
-    buildHelpMessage,
-    buildMealMessage,
-    buildScheduleMessage,
-    buildTimetableMessage,
-} from "../services/schoolInfoService.js";
-import {
-    buildErrorResponse,
-    buildSimpleTextResponse,
-} from "./responseBuilder.js";
-import { toZonedDayjs } from "../utils/date.js";
+  formatToKoreanLongDate,
+  formatToKoreanShortDate,
+  getKstDateByOffset,
+  getKstToday,
+  parseFlexibleDate,
+} from '../utils/date.js';
+import { buildQuickReplies, buildSimpleTextResponse } from './responseBuilder.js';
 
-const extractValue = (source, keys = []) => {
-    for (const key of keys) {
-        if (source?.[key]) {
-            return source[key];
-        }
-    }
-    return undefined;
+const QUICK_REPLY_ITEMS = [
+  { label: '오늘 급식', messageText: '오늘 급식 알려줘' },
+  { label: '내일 급식', messageText: '내일 급식 알려줘' },
+  { label: '학사 일정', messageText: '학사 일정 알려줘' },
+  { label: '수행평가', messageText: '수행평가 일정 알려줘' },
+  { label: '디데이', messageText: '디데이 알려줘' },
+];
+
+const formatMealText = (mealTypeText, targetDate, meals) => {
+  if (!meals.length) {
+    return `${formatToKoreanLongDate(targetDate)} 급식 정보가 없습니다.`;
+  }
+
+  const sections = meals.map((meal) => {
+    const dishes = meal.dishes
+      .map((dish) => {
+        const allergy = dish.allergyCodes.length
+          ? ` (알레르기: ${dish.allergyCodes.join(', ')})`
+          : '';
+        return `• ${dish.name}${allergy}`;
+      })
+      .join('\n');
+
+    const extras = [meal.calorie, meal.origin].filter(Boolean).join('\n');
+
+    return [
+      `【${meal.mealName}】`,
+      dishes,
+      extras ? `\n${extras}` : null,
+    ]
+      .filter(Boolean)
+      .join('\n');
+  });
+
+  return [`${mealTypeText} (${formatToKoreanLongDate(targetDate)})`, ...sections].join('\n\n');
 };
 
-const parseDateParam = (action) => {
-    const direct = extractValue(action?.params, ["date", "day", "targetDate"]);
-    if (direct) {
-        return toZonedDayjs(direct);
-    }
+const handleMeal = async (mealType) => {
+  if (mealType === 'allergy') {
+    const allergyText = getAllergyListText();
+    return buildSimpleTextResponse(
+      `학교 급식 알레르기 표시 번호 목록입니다.\n\n${allergyText}`,
+      buildQuickReplies(QUICK_REPLY_ITEMS)
+    );
+  }
 
-    const detailed = extractValue(action?.detailParams, [
-        "date",
-        "sys_date",
-        "targetDate",
-    ]);
-
-    if (detailed?.value) {
-        return toZonedDayjs(detailed.value);
-    }
-
-    if (detailed?.origin) {
-        return toZonedDayjs(detailed.origin);
-    }
-
-    return null;
+  const offset = mealType === 'tomorrow' ? 1 : 0;
+  const targetDate = getKstDateByOffset(offset);
+  const meals = await getMealsByDate(targetDate);
+  const text = formatMealText(offset === 0 ? '오늘 급식' : '내일 급식', targetDate, meals);
+  return buildSimpleTextResponse(text, buildQuickReplies(QUICK_REPLY_ITEMS));
 };
 
-const parseRangeParams = (action) => {
-    const startDetail = extractValue(action?.detailParams, ["startDate"]);
-    const endDetail = extractValue(action?.detailParams, ["endDate"]);
+const handleSchedule = async () => {
+  const today = getKstToday();
+  const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+  const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+  const schedules = await getMonthlySchedule(firstDay, lastDay);
 
-    const start = extractValue(action?.params, ["startDate"]);
-    const end = extractValue(action?.params, ["endDate"]);
+  if (!schedules.length) {
+    return buildSimpleTextResponse(
+      `${formatToKoreanShortDate(today)} 기준으로 등록된 이번 달 학사 일정이 없습니다.`,
+      buildQuickReplies(QUICK_REPLY_ITEMS)
+    );
+  }
 
-    return {
-        start: start
-            ? toZonedDayjs(start)
-            : startDetail?.value
-            ? toZonedDayjs(startDetail.value)
-            : null,
-        end: end
-            ? toZonedDayjs(end)
-            : endDetail?.value
-            ? toZonedDayjs(endDetail.value)
-            : null,
-    };
+  const lines = schedules
+    .map((schedule) => {
+      const parsedDate = schedule.date ? parseFlexibleDate(schedule.date) : null;
+      const displayDate = formatToKoreanShortDate(parsedDate ?? today);
+      const grade = schedule.grade ? ` (${schedule.grade})` : '';
+      const detail = schedule.description ? `\n  - ${schedule.description}` : '';
+      return {
+        sortKey: parsedDate?.getTime() ?? Number.MAX_SAFE_INTEGER,
+        text: `${displayDate} : ${schedule.title || '학사 일정'}${grade}${detail}`,
+      };
+    })
+    .sort((a, b) => a.sortKey - b.sortKey)
+    .map((item) => item.text)
+    .join('\n\n');
+
+  return buildSimpleTextResponse(`이번 달 학사 일정입니다.\n\n${lines}`, buildQuickReplies(QUICK_REPLY_ITEMS));
 };
 
-const detectPeriod = (action, utterance = "") => {
-    const periodParam = extractValue(action?.params, ["period"]);
-    const detailPeriod = extractValue(action?.detailParams, ["period"]);
-    const periodValue = periodParam || detailPeriod?.value;
+const handleAssessments = async () => {
+  const assessments = await getPerformanceAssessments();
 
-    if (periodValue) {
-        return String(periodValue).toLowerCase();
-    }
+  if (!assessments.length) {
+    return buildSimpleTextResponse(
+      '등록된 수행평가 일정이 없습니다. data/performanceAssessments.json 파일을 확인해 주세요.',
+      buildQuickReplies(QUICK_REPLY_ITEMS)
+    );
+  }
 
-    if (utterance.includes("다음 주") || utterance.includes("다음주")) {
-        return "nextweek";
-    }
+  const lines = assessments
+    .map((item) => {
+      const subject = item.subject ? ` [${item.subject}]` : '';
+      const description = item.description ? `\n  - ${item.description}` : '';
+      return `${item.displayDate}${subject} : ${item.title}${description}`;
+    })
+    .join('\n\n');
 
-    if (utterance.includes("이번 주") || utterance.includes("이번주")) {
-        return "week";
-    }
-
-    if (utterance.includes("다음 달") || utterance.includes("다음달")) {
-        return "nextmonth";
-    }
-
-    if (utterance.includes("이번 달") || utterance.includes("이번달")) {
-        return "month";
-    }
-
-    if (utterance.includes("내일")) {
-        return "tomorrow";
-    }
-
-    if (utterance.includes("모레")) {
-        return "day2";
-    }
-
-    return "day";
+  return buildSimpleTextResponse(`수행평가 일정입니다.\n\n${lines}`, buildQuickReplies(QUICK_REPLY_ITEMS));
 };
 
-const toMonday = (date) => date.startOf("week").add(1, "day");
+const handleDday = async () => {
+  const upcoming = getUpcomingDday();
+  if (!upcoming) {
+    return buildSimpleTextResponse(
+      '앞으로 남은 디데이가 없어요. data/dday.json 파일을 확인해 주세요.',
+      buildQuickReplies(QUICK_REPLY_ITEMS)
+    );
+  }
 
-const resolveDateRange = (action, utterance = "") => {
-    const base = parseDateParam(action) || toZonedDayjs();
-    const { start, end } = parseRangeParams(action);
-
-    if (start && end) {
-        return { startDate: start, endDate: end };
-    }
-
-    if (start && !end) {
-        return { startDate: start, endDate: start };
-    }
-
-    const period = detectPeriod(action, utterance);
-
-    switch (period) {
-        case "tomorrow":
-            return {
-                startDate: base.add(1, "day"),
-                endDate: base.add(1, "day"),
-            };
-        case "day2":
-            return {
-                startDate: base.add(2, "day"),
-                endDate: base.add(2, "day"),
-            };
-        case "nextweek": {
-            const nextMonday = toMonday(base).add(7, "day");
-            return { startDate: nextMonday, endDate: nextMonday.add(6, "day") };
-        }
-        case "week": {
-            const monday = toMonday(base);
-            return { startDate: monday, endDate: monday.add(6, "day") };
-        }
-        case "nextmonth": {
-            const first = base.add(1, "month").startOf("month");
-            return { startDate: first, endDate: first.endOf("month") };
-        }
-        case "month": {
-            const first = base.startOf("month");
-            return { startDate: first, endDate: first.endOf("month") };
-        }
-        default:
-            return { startDate: base, endDate: base };
-    }
+  const description = upcoming.description ? `\n${upcoming.description}` : '';
+  const text = `${upcoming.label} ${upcoming.title}\n${upcoming.displayDate}${description}`;
+  return buildSimpleTextResponse(text, buildQuickReplies(QUICK_REPLY_ITEMS));
 };
 
-const verifySignature = (req) => {
-    if (!config.kakaoSkillSecret) {
-        return true;
-    }
+const DEFAULT_HANDLER = () =>
+  buildSimpleTextResponse(
+    '요청을 이해하지 못했어요. 오늘 급식, 내일 급식, 학사 일정, 수행평가 일정, 디데이를 요청해 주세요.',
+    buildQuickReplies(QUICK_REPLY_ITEMS)
+  );
 
-    const signature = req.headers["x-kakao-signature"];
-    if (!signature) {
-        return false;
-    }
+export const handleSkillRequest = async (body) => {
+  const actionParams = body?.action?.params ?? {};
+  const mealType = (actionParams.mealType || actionParams['meal_type'] || '').toLowerCase();
+  const intentName = (body?.intent?.name ?? '').toLowerCase();
+  const skillType = (actionParams.skill || actionParams['skill_type'] || intentName).toLowerCase();
 
-    const rawBody = req.rawBody || "";
-    const computed = crypto
-        .createHmac("sha256", config.kakaoSkillSecret)
-        .update(rawBody)
-        .digest("base64");
-
-    return signature === computed;
+  switch (skillType) {
+    case 'meal':
+    case 'mealintent':
+      return handleMeal(['today', 'tomorrow', 'allergy'].includes(mealType) ? mealType : 'today');
+    case 'schedule':
+    case 'scheduleintent':
+      return handleSchedule();
+    case 'assessment':
+    case 'assessmentintent':
+      return handleAssessments();
+    case 'dday':
+    case 'ddayintent':
+      return handleDday();
+    default:
+      if (['today', 'tomorrow', 'allergy'].includes(mealType)) {
+        return handleMeal(mealType);
+      }
+      if (intentName.includes('meal')) {
+        return handleMeal(['today', 'tomorrow', 'allergy'].includes(mealType) ? mealType : 'today');
+      }
+      if (intentName.includes('schedule')) {
+        return handleSchedule();
+      }
+      if (intentName.includes('assessment')) {
+        return handleAssessments();
+      }
+      if (intentName.includes('dday')) {
+        return handleDday();
+      }
+      return DEFAULT_HANDLER();
+  }
 };
 
-const buildQuickReplies = (actionName) => {
-    const baseReplies = [
-        { label: "도움말", messageText: "도움말" },
-        { label: "오늘 급식", messageText: "오늘 급식 알려줘" },
-        { label: "시간표", messageText: "오늘 시간표 알려줘" },
-    ];
-
-    switch (actionName) {
-        case "meal":
-            return [
-                { label: "오늘 급식", messageText: "오늘 급식 알려줘" },
-                { label: "내일 급식", messageText: "내일 급식 알려줘" },
-                { label: "학사일정", messageText: "이번 주 학사일정 알려줘" },
-            ];
-        case "schedule":
-            return [
-                {
-                    label: "이번 주 일정",
-                    messageText: "이번 주 학사일정 알려줘",
-                },
-                {
-                    label: "다음 주 일정",
-                    messageText: "다음 주 학사일정 알려줘",
-                },
-                { label: "시험 일정", messageText: "다음 시험 일정 알려줘" },
-            ];
-        case "timetable":
-            return [
-                { label: "오늘 시간표", messageText: "오늘 시간표 알려줘" },
-                { label: "내일 시간표", messageText: "내일 시간표 알려줘" },
-                { label: "학사일정", messageText: "이번 주 학사일정 알려줘" },
-            ];
-        case "exam":
-            return [
-                { label: "시험 일정", messageText: "다음 시험 일정 알려줘" },
-                { label: "수행평가", messageText: "다가오는 수행평가 알려줘" },
-                { label: "시간표", messageText: "오늘 시간표 알려줘" },
-            ];
-        case "assessment":
-            return [
-                { label: "수행평가", messageText: "다가오는 수행평가 알려줘" },
-                { label: "시험 일정", messageText: "다음 시험 일정 알려줘" },
-                { label: "급식", messageText: "오늘 급식 알려줘" },
-            ];
-        default:
-            return baseReplies;
-    }
-};
-
-export const handleKakaoSkill = async (req, res) => {
-    try {
-        if (!verifySignature(req)) {
-            return res
-                .status(401)
-                .json(buildErrorResponse("서명 검증에 실패했습니다."));
-        }
-
-        const actionNameRaw =
-            req.body?.action?.name || req.body?.intent?.name || "help";
-        const actionName = String(actionNameRaw).toLowerCase();
-        const utterance = req.body?.userRequest?.utterance || "";
-
-        const { startDate, endDate } = resolveDateRange(
-            req.body?.action,
-            utterance
-        );
-
-        let text;
-        switch (actionName) {
-            case "meal":
-            case "meal_today":
-                text = await buildMealMessage(startDate);
-                break;
-            case "timetable":
-                text = await buildTimetableMessage(startDate);
-                break;
-            case "schedule":
-                text = await buildScheduleMessage(startDate, endDate);
-                break;
-            case "exam":
-                text = await buildExamMessage(startDate, endDate);
-                break;
-            case "assessment":
-                text = await buildAssessmentMessage(startDate, endDate);
-                break;
-            default:
-                text = buildHelpMessage();
-                break;
-        }
-
-        const quickReplies = buildQuickReplies(actionName);
-        return res.json(buildSimpleTextResponse(text, quickReplies));
-    } catch (error) {
-        console.error("[Kakao Skill] Error", error);
-        return res.json(
-            buildErrorResponse(
-                "정보를 불러오는데 실패했습니다. 잠시 후 다시 시도해주세요."
-            )
-        );
-    }
-};

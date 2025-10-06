@@ -1,20 +1,26 @@
 [
     {
-        "title": "영어 발표 평가",
-        "subject": "영어",
-        "date": "2025-06-15",
-        "description": "News article presentation"
+        "title": "미국 기행문",
+        "subject": "국어A(임소연T)",
+        "date": "2025-12 이전",
+        "description": ""
     },
     {
-        "title": "과학 실험 보고서",
-        "subject": "과학",
-        "date": "2025-05-28",
-        "description": "화학 반응 실험 결과 제출"
+        "title": "운동량과 충격량 실험",
+        "subject": "물리학A(황휘T)",
+        "date": "2025-10-27 ~ 2025-10-31",
+        "description": "실험보고서 제출"
     },
     {
-        "title": "수학 프로젝트",
-        "subject": "수학",
-        "date": "2025-07-03",
-        "description": "확률 통계 조사 발표"
+        "title": "열역학 과정 실험",
+        "subject": "물리학A(황휘T)",
+        "date": "2025-11-17 ~ 2025-11-21",
+        "description": "실험보고서 제출"
+    },
+    {
+        "title": "전체 사진 촬영",
+        "subject": "지구과학B(오지환T)",
+        "date": "2025-11-23",
+        "description": "3개의 서로 다른 천체, 서로 다른 날 촬영\n각각 손O, 손X, 스텔라리움 3장씩"
     }
 ]

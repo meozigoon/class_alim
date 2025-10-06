@@ -1,17 +1,27 @@
 ﻿[
     {
         "title": "기말고사",
-        "date": "2025-12-10",
+        "date": "2025-12-11",
         "description": "2학기 기말고사 시작"
     },
     {
         "title": "방학식",
-        "date": "2025-07-19",
-        "description": "여름방학 시작"
+        "date": "2025-01-01",
+        "description": "겨울방학 시작"
     },
     {
-        "title": "수학여행",
-        "date": "2025-09-03",
-        "description": "3학년 수학여행 출발"
+        "title": "해외 이공계체험학습",
+        "date": "2025-10-20",
+        "description": "미국"
+    },
+    {
+        "title": "개학식",
+        "date": "2025-02-02",
+        "description": "학년말 개학"
+    },
+    {
+        "title": "종업식",
+        "date": "2025-02-06",
+        "description": ""
     }
 ]

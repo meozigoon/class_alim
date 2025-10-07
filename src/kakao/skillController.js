@@ -17,7 +17,7 @@ import {
 } from "../utils/date.js";
 import {
     buildSimpleTextResponse,
-    buildBasicCardCarouselResponse,
+    buildSimpleTextsResponse,
 } from "./responseBuilder.js";
 
 const toSnakeCase = (key) =>
@@ -67,9 +67,9 @@ const buildMealSectionContent = (meal) => {
     return [dishesOrFallback, extras].filter(Boolean).join("\n\n");
 };
 
-const buildMealCards = (meals) => {
+const buildMealTexts = (meals) => {
     const remainingMeals = [...meals];
-    const cards = [];
+    const texts = [];
 
     for (let i = 0; i < MEAL_SECTION_ORDER.length; i += 1) {
         const section = MEAL_SECTION_ORDER[i];
@@ -87,15 +87,7 @@ const buildMealCards = (meals) => {
         const title = `${section.label} 급식`;
         const description = buildMealSectionContent(matchedMeal);
 
-        cards.push({
-            title,
-            description,
-            thumbnail: {
-                imageUrl:
-                    matchedMeal?.thumbnailUrl ||
-                    "https://hssh-info.vercel.app/image/hssh_Logo.png",
-            },
-        });
+        texts.push([title, description].filter(Boolean).join("\n\n"));
     }
 
     if (remainingMeals.length) {
@@ -108,16 +100,21 @@ const buildMealCards = (meals) => {
             })
             .join("\n\n");
 
-        const lastIndex = cards.length - 1;
+        const lastIndex = texts.length - 1;
         if (lastIndex >= 0) {
-            const lastCard = cards[lastIndex];
-            lastCard.description = [lastCard.description, "추가 메뉴", extras]
+            texts[lastIndex] = [
+                texts[lastIndex],
+                "추가 메뉴",
+                extras,
+            ]
                 .filter(Boolean)
                 .join("\n\n");
+        } else {
+            texts.push(["추가 메뉴", extras].filter(Boolean).join("\n\n"));
         }
     }
 
-    return cards;
+    return texts;
 };
 
 const formatTimetableText = (label, targetDate, lessons) => {
@@ -163,8 +160,8 @@ const handleMeal = async (mealType, params) => {
     }
 
     const meals = await getMealsByDate(targetDate);
-    const cards = buildMealCards(meals);
-    return buildBasicCardCarouselResponse(cards);
+    const texts = buildMealTexts(meals);
+    return buildSimpleTextsResponse(texts);
 };
 
 const handleTimetable = async (timetableType, params) => {

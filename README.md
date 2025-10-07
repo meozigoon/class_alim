@@ -36,7 +36,7 @@ vercel.json                   # Vercel 설정 (region 등)
 ## 준비 사항
 
 1. **Node.js 20+**, **npm** 설치
-2. [`NEIS Open API`](https://open.neis.go.kr/) 발급 키 (급식용, 학사 일정·시간표용)
+2. [`NEIS Open API`](https://open.neis.go.kr/) 발급 키 (급식용, 학사 일정용, 시간표용)
 3. 교육청 코드(`ATPT_OFCDC_SC_CODE`), 학교 코드(`SD_SCHUL_CODE`)
 4. 챗봇에서 사용할 **디데이 목록**과 **수행평가 일정**을 `data/*.json` 파일에 입력
 
@@ -101,12 +101,13 @@ cp .env.example .env # 로컬 테스트 시
 
 ### 환경변수
 
-| Key                     | 설명                               |
-| ----------------------- | ---------------------------------- |
-| `NEIS_API_KEY`          | NEIS 오픈 API 인증키 (급식)         |
-| `NEIS_SCHEDULE_API_KEY` | NEIS 오픈 API 인증키 (학사 일정·시간표) |
-| `NEIS_EDU_OFFICE_CODE`  | 교육청 코드 (`ATPT_OFCDC_SC_CODE`) |
-| `NEIS_SCHOOL_CODE`      | 학교 코드 (`SD_SCHUL_CODE`)        |
+| Key                      | 설명                               |
+| ------------------------ | ---------------------------------- |
+| `NEIS_API_KEY`           | NEIS 오픈 API 인증키 (급식)        |
+| `NEIS_SCHEDULE_API_KEY`  | NEIS 오픈 API 인증키 (학사 일정)   |
+| `NEIS_TIMETABLE_API_KEY` | NEIS 오픈 API 인증키 (시간표)      |
+| `NEIS_EDU_OFFICE_CODE`   | 교육청 코드 (`ATPT_OFCDC_SC_CODE`) |
+| `NEIS_SCHOOL_CODE`       | 학교 코드 (`SD_SCHUL_CODE`)        |
 
 ### 로컬 실행
 
@@ -147,6 +148,7 @@ curl -X POST http://localhost:3000/api/kakao \
 3. Vercel 대시보드 → `Settings → Environment Variables` 에 아래 값 등록
     - `NEIS_API_KEY`
     - `NEIS_SCHEDULE_API_KEY`
+    - `NEIS_TIMETABLE_API_KEY`
     - `NEIS_EDU_OFFICE_CODE`
     - `NEIS_SCHOOL_CODE`
     - `NEIS_CLASS_GRADE`
@@ -199,7 +201,7 @@ curl -X POST http://localhost:3000/api/kakao \
 ## 참고 및 커스터마이징
 
 -   학사 일정 응답은 오늘 포함 향후 7일간의 일정만 표시합니다.
--   학사 일정과 시간표는 `NEIS_SCHEDULE_API_KEY` 값을 사용하여 동일한 NEIS API 호출로 제공합니다.
+-   학사 일정은 `NEIS_SCHEDULE_API_KEY`, 시간표는 `NEIS_TIMETABLE_API_KEY` 값을 사용하여 각기 다른 인증키로 호출합니다.
 -   `src/services/allergyService.js`의 목록은 식품의약품안전처 발표(19개 품목)를 기준으로 했습니다. 학교에서 추가로 사용하는 알레르기 번호가 있다면 직접 확장하세요.
 -   수행평가/디데이 JSON 파일은 필요할 때마다 수정 후 재배포(또는 Vercel KV/Edge Config 등)로 확장할 수 있습니다.
 -   일정/급식 API 실패 시 에러 메시지를 내려줍니다. 카카오 오픈빌더에서 **재시도** 유도 멘트를 추가하면 좋습니다.

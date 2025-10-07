@@ -147,7 +147,7 @@ const sanitizeTimetableEntry = (row) => {
 
 export const getClassTimetableByDate = async (date) => {
     const rows = await requestNeis("classTimeTable", {
-        KEY: neisConfig.scheduleApiKey(),
+        KEY: neisConfig.timetableApiKey(),
         Type: "json",
         pIndex: 1,
         pSize: 100,

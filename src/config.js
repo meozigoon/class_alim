@@ -15,8 +15,8 @@ const getEnv = (key, options = {}) => {
 
 export const neisConfig = {
     apiKey: () => getEnv("NEIS_API_KEY", { required: true }),
-    scheduleApiKey: () =>
-        getEnv("NEIS_SCHEDULE_API_KEY", { required: true }),
+    scheduleApiKey: () => getEnv("NEIS_SCHEDULE_API_KEY", { required: true }),
+    timetableApiKey: () => getEnv("NEIS_TIMETABLE_API_KEY", { required: true }),
     eduOfficeCode: () => getEnv("NEIS_EDU_OFFICE_CODE", { required: true }),
     schoolCode: () => getEnv("NEIS_SCHOOL_CODE", { required: true }),
     classGrade: () => getEnv("NEIS_CLASS_GRADE", { required: true }),

@@ -58,12 +58,7 @@ const buildMealSectionContent = (meal) => {
     }
 
     const dishes = (meal.dishes ?? [])
-        .map((dish) => {
-            const allergy = dish.allergyCodes.length
-                ? ` (알레르기: ${dish.allergyCodes.join(", ")})`
-                : "";
-            return `• ${dish.name}${allergy}`;
-        })
+        .map((dish) => `• ${dish.name}`)
         .join("\n");
 
     const dishesOrFallback = dishes || "• 등록된 메뉴가 없습니다.";
@@ -153,31 +148,17 @@ const handleMeal = async (mealType, params) => {
         "targetDate",
         "date",
     ]);
-    let baseDate;
-    let referenceLabel;
+    let targetDate;
 
     if (explicitDate) {
-        baseDate = explicitDate;
-        referenceLabel = "선택한 날짜";
+        targetDate = explicitDate;
     } else {
         const offset = mealType === "tomorrow" ? 1 : 0;
-        baseDate = getKstDateByOffset(offset);
-        referenceLabel = offset === 0 ? "오늘" : "내일";
+        targetDate = getKstDateByOffset(offset);
     }
-
-    const targetDate = new Date(baseDate.getTime());
-    targetDate.setDate(targetDate.getDate() + 7);
 
     const meals = await getMealsByDate(targetDate);
     const cards = buildMealCards(meals);
-    if (cards.length) {
-        cards[0].description = [
-            `${referenceLabel} 기준 7일 후 급식입니다.`,
-            cards[0].description,
-        ]
-            .filter(Boolean)
-            .join("\n\n");
-    }
     return buildBasicCardCarouselResponse(cards);
 };
 

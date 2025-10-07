@@ -9,6 +9,7 @@ import { getAllergyListText } from "../services/allergyService.js";
 import {
     formatToKoreanLongDate,
     formatToKoreanShortDate,
+    formatToNeisDate,
     getKstDateByOffset,
     getKstToday,
     parseFlexibleDate,
@@ -115,42 +116,48 @@ const handleTimetable = async (timetableType) => {
 
 const handleSchedule = async () => {
     const today = getKstToday();
-    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
-    const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-    const schedules = await getMonthlySchedule(firstDay, lastDay);
+    const endDate = getKstDateByOffset(6);
+    const startKey = formatToNeisDate(today);
+    const endKey = formatToNeisDate(endDate);
+    const schedules = await getMonthlySchedule(today, endDate);
+    const upcomingSchedules = schedules
+        .filter((schedule) => {
+            if (!schedule.date) {
+                return false;
+            }
+            return schedule.date >= startKey && schedule.date <= endKey;
+        })
+        .sort((a, b) => a.date.localeCompare(b.date));
 
-    if (!schedules.length) {
+    if (!upcomingSchedules.length) {
         return buildSimpleTextResponse(
             `${formatToKoreanShortDate(
                 today
-            )} 기준으로 등록된 이번 달 학사 일정이 없습니다.`,
+            )} 기준으로 향후 7일 학사 일정이 없습니다.`,
             buildQuickReplies(QUICK_REPLY_ITEMS)
         );
     }
 
-    const lines = schedules
+    const lines = upcomingSchedules
         .map((schedule) => {
             const parsedDate = schedule.date
                 ? parseFlexibleDate(schedule.date)
                 : null;
-            const displayDate = formatToKoreanShortDate(parsedDate ?? today);
+            const displayDate = parsedDate
+                ? formatToKoreanShortDate(parsedDate)
+                : schedule.date;
             const grade = schedule.grade ? ` (${schedule.grade})` : "";
             const detail = schedule.description
                 ? `\n  - ${schedule.description}`
                 : "";
-            return {
-                sortKey: parsedDate?.getTime() ?? Number.MAX_SAFE_INTEGER,
-                text: `${displayDate} : ${
-                    schedule.title || "학사 일정"
-                }${grade}${detail}`,
-            };
+            return `${displayDate} : ${
+                schedule.title || "학사 일정"
+            }${grade}${detail}`;
         })
-        .sort((a, b) => a.sortKey - b.sortKey)
-        .map((item) => item.text)
         .join("\n\n");
 
     return buildSimpleTextResponse(
-        `이번 달 학사 일정입니다.\n\n${lines}`,
+        `오늘 포함 향후 7일 학사 일정입니다.\n\n${lines}`,
         buildQuickReplies(QUICK_REPLY_ITEMS)
     );
 };

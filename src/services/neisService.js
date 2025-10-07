@@ -107,7 +107,7 @@ export const getMealsByDate = async (date) => {
 
 export const getMonthlySchedule = async (fromDate, toDate) => {
     const rows = await requestNeis("SchoolSchedule", {
-        KEY: neisConfig.apiKey(),
+        KEY: neisConfig.scheduleApiKey(),
         Type: "json",
         pIndex: 1,
         pSize: 200,
@@ -147,7 +147,7 @@ const sanitizeTimetableEntry = (row) => {
 
 export const getClassTimetableByDate = async (date) => {
     const rows = await requestNeis("classTimeTable", {
-        KEY: neisConfig.apiKey(),
+        KEY: neisConfig.scheduleApiKey(),
         Type: "json",
         pIndex: 1,
         pSize: 100,

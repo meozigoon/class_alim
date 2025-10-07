@@ -109,7 +109,7 @@ const handleMeal = async (mealType, params) => {
 
     if (explicitDate) {
         targetDate = explicitDate;
-        label = "지정일 급식";
+        label = "급식";
     } else {
         const offset = mealType === "tomorrow" ? 1 : 0;
         targetDate = getKstDateByOffset(offset);
@@ -132,7 +132,7 @@ const handleTimetable = async (timetableType, params) => {
 
     if (explicitDate) {
         targetDate = explicitDate;
-        label = "지정일 시간표";
+        label = "시간표";
     } else {
         const offset = timetableType === "tomorrow" ? 1 : 0;
         targetDate = getKstDateByOffset(offset);

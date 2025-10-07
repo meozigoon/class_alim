@@ -36,28 +36,18 @@ export const buildBasicCardCarouselResponse = (items) => ({
     },
 });
 
-export const buildListCardResponse = (headerTitle, items) => {
-    const listCard = {
-        items,
-    };
-
-    if (headerTitle) {
-        listCard.header = {
-            title: headerTitle,
-        };
-    }
-
-    return {
-        version: "2.0",
-        template: {
-            outputs: [
-                {
-                    listCard,
-                },
-            ],
-        },
-    };
-};
+export const buildTextCardResponse = (cards) => ({
+    version: "2.0",
+    template: {
+        outputs: cards.map((card) => ({
+            textCard: {
+                title: card.title || "",
+                description: card.description || "",
+                buttons: card.buttons || [],
+            },
+        })),
+    },
+});
 
 export const buildErrorResponse = (message) =>
     buildSimpleTextResponse(

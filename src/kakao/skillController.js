@@ -17,7 +17,7 @@ import {
 } from "../utils/date.js";
 import {
     buildSimpleTextResponse,
-    buildListCardResponse,
+    buildTextCardResponse,
 } from "./responseBuilder.js";
 
 const toSnakeCase = (key) =>
@@ -67,9 +67,9 @@ const buildMealSectionContent = (meal) => {
     return [dishesOrFallback, extras].filter(Boolean).join("\n\n");
 };
 
-const buildMealListItems = (meals) => {
+const buildMealTextCards = (meals) => {
     const remainingMeals = [...meals];
-    const items = [];
+    const cards = [];
 
     for (let i = 0; i < MEAL_SECTION_ORDER.length; i += 1) {
         const section = MEAL_SECTION_ORDER[i];
@@ -87,7 +87,7 @@ const buildMealListItems = (meals) => {
         const title = `${section.label} 급식`;
         const description = buildMealSectionContent(matchedMeal);
 
-        items.push({
+        cards.push({
             title,
             description,
         });
@@ -103,12 +103,12 @@ const buildMealListItems = (meals) => {
             })
             .join("\n\n");
 
-        const lastIndex = items.length - 1;
+        const lastIndex = cards.length - 1;
         if (lastIndex >= 0) {
-            items[lastIndex] = {
-                ...items[lastIndex],
+            cards[lastIndex] = {
+                ...cards[lastIndex],
                 description: [
-                    items[lastIndex].description,
+                    cards[lastIndex].description,
                     "추가 메뉴",
                     extras,
                 ]
@@ -117,14 +117,14 @@ const buildMealListItems = (meals) => {
             };
         } else {
             const extrasDescription = extras || "등록된 메뉴가 없습니다.";
-            items.push({
+            cards.push({
                 title: "추가 메뉴",
                 description: extrasDescription,
             });
         }
     }
 
-    return items;
+    return cards;
 };
 
 const formatTimetableText = (label, targetDate, lessons) => {
@@ -174,21 +174,28 @@ const handleMeal = async (mealType, params) => {
     }
 
     const meals = await getMealsByDate(targetDate);
-    const items = buildMealListItems(meals);
+    const cards = buildMealTextCards(meals);
 
-    if (!items.length) {
+    if (!cards.length) {
         return buildSimpleTextResponse(
             `${formatToKoreanLongDate(targetDate)} 급식 정보가 없습니다.`
         );
     }
 
-    const listHeader = explicitDate
+    const headerText = explicitDate
         ? headerTitle
         : offset === 0
         ? headerTitle
         : `${headerTitle} (${formatToKoreanLongDate(targetDate)})`;
 
-    return buildListCardResponse(listHeader, items);
+    cards[0] = {
+        ...cards[0],
+        description: [headerText, cards[0].description]
+            .filter(Boolean)
+            .join("\n\n"),
+    };
+
+    return buildTextCardResponse(cards);
 };
 
 const handleTimetable = async (timetableType, params) => {

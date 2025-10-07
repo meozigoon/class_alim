@@ -96,6 +96,19 @@ Content-Type: application/json
   }
 }
 
+### Local Exam D-Day
+POST {{localHost}}/api/kakao
+Content-Type: application/json
+
+{
+  "intent": { "name": "ExamIntent" },
+  "action": {
+    "params": {
+      "skill": "exam"
+    }
+  }
+}
+
 ### Deployed Meal (오늘 급식)
 POST {{deploymentHost}}/api/kakao
 Content-Type: application/json
@@ -187,6 +200,19 @@ Content-Type: application/json
   "action": {
     "params": {
       "skill": "dday"
+    }
+  }
+}
+
+### Deployed Exam D-Day
+POST {{deploymentHost}}/api/kakao
+Content-Type: application/json
+
+{
+  "intent": { "name": "ExamIntent" },
+  "action": {
+    "params": {
+      "skill": "exam"
     }
   }
 }

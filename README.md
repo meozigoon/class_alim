@@ -23,11 +23,13 @@ src/
     allergyService.js         # 알레르기 코드 목록
     assessmentService.js      # 수행평가 JSON 로더
     ddayService.js            # D-Day 계산
+    examDdayService.js        # 시험 디데이 계산
     neisService.js            # NEIS API 연동
   utils/
     date.js                   # KST 날짜 유틸리티
 data/
   dday.json                   # 디데이 데이터(사용자 수정)
+  examSchedules.json          # 시험 일정 데이터(사용자 수정)
   performanceAssessments.json # 수행평가 데이터(사용자 수정)
 .env.example                  # 필수 환경변수 샘플
 vercel.json                   # Vercel 설정 (region 등)
@@ -38,7 +40,7 @@ vercel.json                   # Vercel 설정 (region 등)
 1. **Node.js 20+**, **npm** 설치
 2. [`NEIS Open API`](https://open.neis.go.kr/) 발급 키 (급식용, 학사 일정용, 시간표용)
 3. 교육청 코드(`ATPT_OFCDC_SC_CODE`), 학교 코드(`SD_SCHUL_CODE`)
-4. 챗봇에서 사용할 **디데이 목록**과 **수행평가 일정**을 `data/*.json` 파일에 입력
+4. 챗봇에서 사용할 **디데이 목록**, **시험 일정**, **수행평가 일정**을 `data/*.json` 파일에 입력
 
 ### NEIS 코드 확인
 
@@ -90,6 +92,27 @@ vercel.json                   # Vercel 설정 (region 등)
 ```
 
 -   오늘 이후 가장 가까운 일정만 `D-?` 형태로 응답합니다.
+
+### 시험 일정 JSON 편집 (`data/examSchedules.json`)
+
+```json
+[
+    {
+        "title": "1학기 중간고사",
+        "date": "2025-05-20",
+        "description": "국어/수학/영어 시험 시작"
+    },
+    {
+        "title": "1학기 기말고사",
+        "date": "2025-07-08",
+        "description": "전과목 기말고사"
+    }
+]
+```
+
+-   `date` 형식은 `YYYY-MM-DD`를 권장합니다.
+-   오늘 이후 가장 가까운 일정이 `시험 이름 D-(남은 날짜)` 형태로 응답됩니다.
+-   `description`은 선택 사항입니다.
 
 ## 설치 및 로컬 테스트
 
@@ -175,6 +198,7 @@ curl -X POST http://localhost:3000/api/kakao \
     - 학사 일정: `{ "skill": "schedule" }` (오늘 포함 7일 학사 일정)
     - 수행평가 일정: `{ "skill": "assessment" }`
     - 디데이: `{ "skill": "dday" }`
+    - 시험 디데이: `{ "skill": "exam" }`
 5. 블록의 발화(사용자 입력)에 따라 위 파라미터를 매핑하거나, 커스텀 슬롯을 만들어 연결합니다.
 6. 챗봇 테스트 후 배포 → 카카오톡 채널 연결
 
@@ -200,6 +224,7 @@ curl -X POST http://localhost:3000/api/kakao \
 -   학사 일정 응답은 오늘 포함 향후 7일간의 일정만 표시합니다.
 -   학사 일정은 `NEIS_SCHEDULE_API_KEY`, 시간표는 `NEIS_TIMETABLE_API_KEY` 값을 사용하여 각기 다른 인증키로 호출합니다.
 -   시간표 조회는 학교급에 따라 `NEIS_TIMETABLE_SERVICE` 값을 `hisTimetable`(고등), `misTimetable`(중등), `elsTimetable`(초등) 등으로 맞춰야 합니다. 기본값 `classTimeTable` 이 맞지 않다면 반드시 변경하세요.
+-   시험 디데이 응답은 `data/examSchedules.json`에 등록한 일정 중 아직 지나지 않은 가장 가까운 시험을 기준으로 합니다.
 -   `src/services/allergyService.js`의 목록은 식품의약품안전처 발표(19개 품목)를 기준으로 했습니다. 학교에서 추가로 사용하는 알레르기 번호가 있다면 직접 확장하세요.
 -   수행평가/디데이 JSON 파일은 필요할 때마다 수정 후 재배포(또는 Vercel KV/Edge Config 등)로 확장할 수 있습니다.
 -   일정/급식 API 실패 시 에러 메시지를 내려줍니다. 카카오 오픈빌더에서 **재시도** 유도 멘트를 추가하면 좋습니다.
@@ -208,6 +233,7 @@ curl -X POST http://localhost:3000/api/kakao \
 ## 유지보수 Tips
 
 -   학기별 디데이 업데이트: `data/dday.json`
+-   시험 일정 변경: `data/examSchedules.json`
 -   수행평가 일정 변경: `data/performanceAssessments.json`
 -   NEIS API 호출 제한이 있으므로 다중 호출 시 캐싱을 추가하고 싶다면 `src/services/neisService.js`에 캐시 레이어를 얹어주세요.
 

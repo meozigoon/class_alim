@@ -4,6 +4,7 @@
     getClassTimetableByDate,
 } from "../services/neisService.js";
 import { getPerformanceAssessments } from "../services/assessmentService.js";
+import { getUpcomingExam } from "../services/examDdayService.js";
 import { getUpcomingDday } from "../services/ddayService.js";
 import { getAllergyListText } from "../services/allergyService.js";
 import {
@@ -172,6 +173,14 @@ const handleDday = async () => {
     return buildSimpleTextResponse(text);
 };
 
+const handleExamDday = () => {
+    const upcoming = getUpcomingExam();
+    if (!upcoming) {
+        return buildSimpleTextResponse("앞으로 남은 시험 일정이 없습니다.");
+    }
+    return buildSimpleTextResponse(`${upcoming.title} D-${upcoming.daysLeft}`);
+};
+
 const DEFAULT_HANDLER = () =>
     buildSimpleTextResponse(
         "요청을 이해하지 못했어요. 메시지를 다시 확인해 주세요."
@@ -220,6 +229,10 @@ export const handleSkillRequest = async (body) => {
         case "dday":
         case "ddayintent":
             return handleDday();
+        case "exam":
+        case "examdday":
+        case "examintent":
+            return handleExamDday();
         default:
             if (["today", "tomorrow", "allergy"].includes(mealType)) {
                 return handleMeal(mealType);
@@ -249,6 +262,9 @@ export const handleSkillRequest = async (body) => {
             }
             if (intentName.includes("dday")) {
                 return handleDday();
+            }
+            if (intentName.includes("exam")) {
+                return handleExamDday();
             }
             return DEFAULT_HANDLER();
     }

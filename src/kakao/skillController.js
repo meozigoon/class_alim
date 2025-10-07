@@ -107,11 +107,7 @@ const buildMealTextCards = (meals) => {
         if (lastIndex >= 0) {
             cards[lastIndex] = {
                 ...cards[lastIndex],
-                description: [
-                    cards[lastIndex].description,
-                    "추가 메뉴",
-                    extras,
-                ]
+                description: [cards[lastIndex].description, "추가 메뉴", extras]
                     .filter(Boolean)
                     .join("\n\n"),
             };
@@ -172,12 +168,16 @@ const handleMeal = async (mealType, params) => {
     const meals = await getMealsByDate(targetDate);
     const cards = buildMealTextCards(meals);
 
-    return buildTextCardCarouselResponse(cards.length ? cards : [
-        {
-            title: "급식 정보",
-            description: "등록된 메뉴가 없습니다.",
-        },
-    ]);
+    return buildTextCardCarouselResponse(
+        cards.length
+            ? cards
+            : [
+                  {
+                      title: "급식 정보",
+                      description: "등록된 메뉴가 없습니다.",
+                  },
+              ]
+    );
 };
 
 const handleTimetable = async (timetableType, params) => {
@@ -224,11 +224,10 @@ const handleSchedule = async (params) => {
 
         const formatScheduleSummary = (schedule) => {
             const title = schedule.title || "학사 일정";
-            const grade = schedule.grade ? ` (${schedule.grade})` : "";
             const detail = schedule.description
                 ? ` - ${schedule.description}`
                 : "";
-            return `${title}${grade}${detail}`;
+            return `${title}${detail}`;
         };
 
         const summary = sameDay.map(formatScheduleSummary).join(", ");
@@ -283,11 +282,10 @@ const handleSchedule = async (params) => {
             const summaries = items
                 .map((schedule) => {
                     const title = schedule.title || "학사 일정";
-                    const grade = schedule.grade ? ` (${schedule.grade})` : "";
                     const detail = schedule.description
                         ? ` - ${schedule.description}`
                         : "";
-                    return `${title}${grade}${detail}`;
+                    return `${title}${detail}`;
                 })
                 .join(", ");
             return `${displayDate} : ${summaries}`;

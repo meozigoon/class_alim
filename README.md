@@ -103,14 +103,14 @@ cp .env.example .env # 로컬 테스트 시
 
 ### 환경변수
 
-| Key                      | 설명                               |
-| ------------------------ | ---------------------------------- |
-| `NEIS_API_KEY`           | NEIS 오픈 API 인증키 (급식)        |
-| `NEIS_SCHEDULE_API_KEY`  | NEIS 오픈 API 인증키 (학사 일정)   |
-| `NEIS_TIMETABLE_API_KEY` | NEIS 오픈 API 인증키 (시간표)      |
+| Key                      | 설명                                                                                               |
+| ------------------------ | -------------------------------------------------------------------------------------------------- |
+| `NEIS_API_KEY`           | NEIS 오픈 API 인증키 (급식)                                                                        |
+| `NEIS_SCHEDULE_API_KEY`  | NEIS 오픈 API 인증키 (학사 일정)                                                                   |
+| `NEIS_TIMETABLE_API_KEY` | NEIS 오픈 API 인증키 (시간표)                                                                      |
 | `NEIS_TIMETABLE_SERVICE` | 시간표 NEIS 서비스명 (예: `hisTimetable`, `misTimetable`, `elsTimetable`, 기본값 `classTimeTable`) |
-| `NEIS_EDU_OFFICE_CODE`   | 교육청 코드 (`ATPT_OFCDC_SC_CODE`) |
-| `NEIS_SCHOOL_CODE`       | 학교 코드 (`SD_SCHUL_CODE`)        |
+| `NEIS_EDU_OFFICE_CODE`   | 교육청 코드 (`ATPT_OFCDC_SC_CODE`)                                                                 |
+| `NEIS_SCHOOL_CODE`       | 학교 코드 (`SD_SCHUL_CODE`)                                                                        |
 
 ### 로컬 실행
 

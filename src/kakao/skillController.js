@@ -17,7 +17,7 @@ import {
 } from "../utils/date.js";
 import {
     buildSimpleTextResponse,
-    buildBasicCardCarouselResponse,
+    buildListCardResponse,
 } from "./responseBuilder.js";
 
 const toSnakeCase = (key) =>
@@ -67,9 +67,9 @@ const buildMealSectionContent = (meal) => {
     return [dishesOrFallback, extras].filter(Boolean).join("\n\n");
 };
 
-const buildMealCards = (meals) => {
+const buildMealListItems = (meals) => {
     const remainingMeals = [...meals];
-    const cards = [];
+    const items = [];
 
     for (let i = 0; i < MEAL_SECTION_ORDER.length; i += 1) {
         const section = MEAL_SECTION_ORDER[i];
@@ -87,12 +87,9 @@ const buildMealCards = (meals) => {
         const title = `${section.label} 급식`;
         const description = buildMealSectionContent(matchedMeal);
 
-        cards.push({
+        items.push({
             title,
             description,
-            thumbnail: {
-                imageUrl: matchedMeal?.thumbnailUrl || "",
-            },
         });
     }
 
@@ -106,29 +103,28 @@ const buildMealCards = (meals) => {
             })
             .join("\n\n");
 
-        const lastIndex = cards.length - 1;
+        const lastIndex = items.length - 1;
         if (lastIndex >= 0) {
-            const lastCard = cards[lastIndex];
-            lastCard.description = [
-                lastCard.description,
-                "추가 메뉴",
-                extras,
-            ]
-                .filter(Boolean)
-                .join("\n\n");
+            items[lastIndex] = {
+                ...items[lastIndex],
+                description: [
+                    items[lastIndex].description,
+                    "추가 메뉴",
+                    extras,
+                ]
+                    .filter(Boolean)
+                    .join("\n\n"),
+            };
         } else {
             const extrasDescription = extras || "등록된 메뉴가 없습니다.";
-            cards.push({
+            items.push({
                 title: "추가 메뉴",
                 description: extrasDescription,
-                thumbnail: {
-                    imageUrl: "",
-                },
             });
         }
     }
 
-    return cards;
+    return items;
 };
 
 const formatTimetableText = (label, targetDate, lessons) => {
@@ -165,17 +161,34 @@ const handleMeal = async (mealType, params) => {
         "date",
     ]);
     let targetDate;
+    let headerTitle;
+    let offset = 0;
 
     if (explicitDate) {
         targetDate = explicitDate;
+        headerTitle = `${formatToKoreanLongDate(targetDate)} 급식`;
     } else {
-        const offset = mealType === "tomorrow" ? 1 : 0;
+        offset = mealType === "tomorrow" ? 1 : 0;
         targetDate = getKstDateByOffset(offset);
+        headerTitle = offset === 0 ? "오늘 급식" : "내일 급식";
     }
 
     const meals = await getMealsByDate(targetDate);
-    const cards = buildMealCards(meals);
-    return buildBasicCardCarouselResponse(cards);
+    const items = buildMealListItems(meals);
+
+    if (!items.length) {
+        return buildSimpleTextResponse(
+            `${formatToKoreanLongDate(targetDate)} 급식 정보가 없습니다.`
+        );
+    }
+
+    const listHeader = explicitDate
+        ? headerTitle
+        : offset === 0
+        ? headerTitle
+        : `${headerTitle} (${formatToKoreanLongDate(targetDate)})`;
+
+    return buildListCardResponse(listHeader, items);
 };
 
 const handleTimetable = async (timetableType, params) => {

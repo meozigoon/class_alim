@@ -159,9 +159,7 @@ const handleSchedule = async (params) => {
 
         if (!sameDay.length) {
             return buildSimpleTextResponse(
-                `${formatToKoreanShortDate(
-                    explicitDate
-                )} 학사 일정이 없습니다.`
+                `${formatToKoreanShortDate(explicitDate)} 학사 일정이 없습니다.`
             );
         }
 
@@ -268,7 +266,7 @@ const handleExamDday = () => {
 
 const DEFAULT_HANDLER = () =>
     buildSimpleTextResponse(
-        "요청을 이해하지 못했어요. 메시지를 다시 확인해 주세요."
+        "요청을 이해하지 못했습니다. 메시지를 다시 확인해 주세요."
     );
 
 export const handleSkillRequest = async (body) => {

@@ -28,7 +28,7 @@ export const buildSimpleTextCarouselResponse = (texts) => ({
         outputs: [
             {
                 carousel: {
-                    type: "simpleText",
+                    type: "basicText",
                     items: texts.map((text) => ({
                         simpleText: {
                             text,

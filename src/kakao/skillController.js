@@ -14,20 +14,7 @@ import {
     getKstToday,
     parseFlexibleDate,
 } from "../utils/date.js";
-import {
-    buildQuickReplies,
-    buildSimpleTextResponse,
-} from "./responseBuilder.js";
-
-const QUICK_REPLY_ITEMS = [
-    { label: "오늘 급식", messageText: "오늘 급식" },
-    { label: "내일 급식", messageText: "내일 급식" },
-    { label: "오늘 시간표", messageText: "오늘 시간표" },
-    { label: "내일 시간표", messageText: "내일 시간표" },
-    { label: "학사 일정", messageText: "학사 일정" },
-    { label: "수행평가", messageText: "수행평가" },
-    { label: "디데이", messageText: "디데이" },
-];
+import { buildSimpleTextResponse } from "./responseBuilder.js";
 
 const formatMealText = (mealTypeText, targetDate, meals) => {
     if (!meals.length) {
@@ -86,8 +73,7 @@ const handleMeal = async (mealType) => {
     if (mealType === "allergy") {
         const allergyText = getAllergyListText();
         return buildSimpleTextResponse(
-            `학교 급식 알레르기 표시 번호 목록입니다.\n\n${allergyText}`,
-            buildQuickReplies(QUICK_REPLY_ITEMS)
+            `학교 급식 알레르기 표시 번호 목록입니다.\n\n${allergyText}`
         );
     }
 
@@ -99,7 +85,7 @@ const handleMeal = async (mealType) => {
         targetDate,
         meals
     );
-    return buildSimpleTextResponse(text, buildQuickReplies(QUICK_REPLY_ITEMS));
+    return buildSimpleTextResponse(text);
 };
 
 const handleTimetable = async (timetableType) => {
@@ -111,7 +97,7 @@ const handleTimetable = async (timetableType) => {
         targetDate,
         lessons
     );
-    return buildSimpleTextResponse(text, buildQuickReplies(QUICK_REPLY_ITEMS));
+    return buildSimpleTextResponse(text);
 };
 
 const handleSchedule = async () => {
@@ -133,8 +119,7 @@ const handleSchedule = async () => {
         return buildSimpleTextResponse(
             `${formatToKoreanShortDate(
                 today
-            )} 기준으로 향후 7일 학사 일정이 없습니다.`,
-            buildQuickReplies(QUICK_REPLY_ITEMS)
+            )} 기준으로 향후 7일 학사 일정이 없습니다.`
         );
     }
 
@@ -157,8 +142,7 @@ const handleSchedule = async () => {
         .join("\n\n");
 
     return buildSimpleTextResponse(
-        `오늘 포함 향후 7일 학사 일정입니다.\n\n${lines}`,
-        buildQuickReplies(QUICK_REPLY_ITEMS)
+        `오늘 포함 향후 7일 학사 일정입니다.\n\n${lines}`
     );
 };
 
@@ -166,10 +150,7 @@ const handleAssessments = async () => {
     const assessments = await getPerformanceAssessments();
 
     if (!assessments.length) {
-        return buildSimpleTextResponse(
-            "등록된 수행평가 일정이 없습니다.",
-            buildQuickReplies(QUICK_REPLY_ITEMS)
-        );
+        return buildSimpleTextResponse("등록된 수행평가 일정이 없습니다.");
     }
 
     const lines = assessments
@@ -182,30 +163,23 @@ const handleAssessments = async () => {
         })
         .join("\n\n");
 
-    return buildSimpleTextResponse(
-        `수행평가 일정입니다.\n\n${lines}`,
-        buildQuickReplies(QUICK_REPLY_ITEMS)
-    );
+    return buildSimpleTextResponse(`수행평가 일정입니다.\n\n${lines}`);
 };
 
 const handleDday = async () => {
     const upcoming = getUpcomingDday();
     if (!upcoming) {
-        return buildSimpleTextResponse(
-            "앞으로 남은 디데이가 없습니다.",
-            buildQuickReplies(QUICK_REPLY_ITEMS)
-        );
+        return buildSimpleTextResponse("앞으로 남은 디데이가 없습니다.");
     }
 
     const description = upcoming.description ? `\n${upcoming.description}` : "";
     const text = `${upcoming.label} ${upcoming.title}\n${upcoming.displayDate}${description}`;
-    return buildSimpleTextResponse(text, buildQuickReplies(QUICK_REPLY_ITEMS));
+    return buildSimpleTextResponse(text);
 };
 
 const DEFAULT_HANDLER = () =>
     buildSimpleTextResponse(
-        "요청을 이해하지 못했어요. 메시지를 다시 확인해 주세요.",
-        buildQuickReplies(QUICK_REPLY_ITEMS)
+        "요청을 이해하지 못했어요. 메시지를 다시 확인해 주세요."
     );
 
 export const handleSkillRequest = async (body) => {

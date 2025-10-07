@@ -99,6 +99,8 @@ cp .env.example .env # 로컬 테스트 시
 # .env에 환경변수 값 채우기
 ```
 
+-   VS Code REST Client 등을 사용한다면 `requests.http` 파일을 열어 바로 API 요청을 전송할 수 있습니다.
+
 ### 환경변수
 
 | Key                      | 설명                               |
@@ -106,6 +108,7 @@ cp .env.example .env # 로컬 테스트 시
 | `NEIS_API_KEY`           | NEIS 오픈 API 인증키 (급식)        |
 | `NEIS_SCHEDULE_API_KEY`  | NEIS 오픈 API 인증키 (학사 일정)   |
 | `NEIS_TIMETABLE_API_KEY` | NEIS 오픈 API 인증키 (시간표)      |
+| `NEIS_TIMETABLE_SERVICE` | 시간표 NEIS 서비스명 (예: `hisTimetable`, `misTimetable`, `elsTimetable`, 기본값 `classTimeTable`) |
 | `NEIS_EDU_OFFICE_CODE`   | 교육청 코드 (`ATPT_OFCDC_SC_CODE`) |
 | `NEIS_SCHOOL_CODE`       | 학교 코드 (`SD_SCHUL_CODE`)        |
 
@@ -149,6 +152,7 @@ curl -X POST http://localhost:3000/api/kakao \
     - `NEIS_API_KEY`
     - `NEIS_SCHEDULE_API_KEY`
     - `NEIS_TIMETABLE_API_KEY`
+    - `NEIS_TIMETABLE_SERVICE`
     - `NEIS_EDU_OFFICE_CODE`
     - `NEIS_SCHOOL_CODE`
     - `NEIS_CLASS_GRADE`
@@ -186,13 +190,6 @@ curl -X POST http://localhost:3000/api/kakao \
                     "text": "오늘 급식 (10월 6일 (월))\n\n【중식】\n• 백미밥\n• 돈육김치찌개 (알레르기: 2, 5, 10)"
                 }
             }
-        ],
-        "quickReplies": [
-            {
-                "label": "내일 급식",
-                "action": "message",
-                "messageText": "내일 급식 알려줘"
-            }
         ]
     }
 }
@@ -202,6 +199,7 @@ curl -X POST http://localhost:3000/api/kakao \
 
 -   학사 일정 응답은 오늘 포함 향후 7일간의 일정만 표시합니다.
 -   학사 일정은 `NEIS_SCHEDULE_API_KEY`, 시간표는 `NEIS_TIMETABLE_API_KEY` 값을 사용하여 각기 다른 인증키로 호출합니다.
+-   시간표 조회는 학교급에 따라 `NEIS_TIMETABLE_SERVICE` 값을 `hisTimetable`(고등), `misTimetable`(중등), `elsTimetable`(초등) 등으로 맞춰야 합니다. 기본값 `classTimeTable` 이 맞지 않다면 반드시 변경하세요.
 -   `src/services/allergyService.js`의 목록은 식품의약품안전처 발표(19개 품목)를 기준으로 했습니다. 학교에서 추가로 사용하는 알레르기 번호가 있다면 직접 확장하세요.
 -   수행평가/디데이 JSON 파일은 필요할 때마다 수정 후 재배포(또는 Vercel KV/Edge Config 등)로 확장할 수 있습니다.
 -   일정/급식 API 실패 시 에러 메시지를 내려줍니다. 카카오 오픈빌더에서 **재시도** 유도 멘트를 추가하면 좋습니다.

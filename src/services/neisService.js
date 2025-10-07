@@ -31,20 +31,43 @@ const requestNeis = async (endpoint, query) => {
     }
 
     const payload = await response.json();
+    const [root] = Object.values(payload ?? {});
 
-    const [meta, data] = Object.values(payload);
-    const result = Array.isArray(meta?.head)
-        ? meta.head.find((item) => item?.RESULT)?.RESULT
+    if (!root) {
+        return [];
+    }
+
+    // Some NEIS responses (e.g. error cases) omit the usual head/row array.
+    if (!Array.isArray(root)) {
+        const result = root?.RESULT ?? root;
+        if (result?.CODE && result.CODE !== "INFO-200") {
+            throw new Error(
+                `NEIS API returned error ${result.CODE}: ${
+                    result.MESSAGE || "알 수 없는 오류"
+                }`
+            );
+        }
+        return [];
+    }
+
+    const headEntry = root.find((item) => Array.isArray(item?.head))?.head;
+    const result = Array.isArray(headEntry)
+        ? headEntry.find((item) => item?.RESULT)?.RESULT
         : null;
 
     if (result?.CODE && result.CODE !== "INFO-000") {
+        if (result.CODE === "INFO-200") {
+            return [];
+        }
         throw new Error(
-            `NEIS API returned error ${result.CODE}: ${result.MESSAGE}`
+            `NEIS API returned error ${result.CODE}: ${
+                result.MESSAGE || "알 수 없는 오류"
+            }`
         );
     }
 
-    const rows = data?.row ?? [];
-    return Array.isArray(rows) ? rows : [];
+    const dataEntry = root.find((item) => Array.isArray(item?.row))?.row ?? [];
+    return Array.isArray(dataEntry) ? dataEntry : [];
 };
 
 const parseDish = (raw) => {
@@ -146,7 +169,8 @@ const sanitizeTimetableEntry = (row) => {
 };
 
 export const getClassTimetableByDate = async (date) => {
-    const rows = await requestNeis("classTimeTable", {
+    const endpoint = neisConfig.timetableService();
+    const rows = await requestNeis(endpoint, {
         KEY: neisConfig.timetableApiKey(),
         Type: "json",
         pIndex: 1,

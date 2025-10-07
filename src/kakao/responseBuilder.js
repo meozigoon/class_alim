@@ -1,30 +1,6 @@
-﻿export const buildQuickReplies = (items = []) =>
-    items.filter(Boolean).map((item) => {
-        const action = item.action ?? "message";
-        const reply = {
-            label: item.label,
-            action,
-        };
-
-        if (action === "block" && item.blockId) {
-            reply.blockId = item.blockId;
-        }
-
-        if (item.messageText) {
-            reply.messageText = item.messageText;
-        } else if (action === "message") {
-            reply.messageText = item.label;
-        }
-
-        if (item.extra) {
-            reply.extra = item.extra;
-        }
-
-        return reply;
-    });
-
-export const buildSimpleTextResponse = (text, quickReplies = []) => {
-    const template = {
+export const buildSimpleTextResponse = (text) => ({
+    version: "2.0",
+    template: {
         outputs: [
             {
                 simpleText: {
@@ -32,17 +8,8 @@ export const buildSimpleTextResponse = (text, quickReplies = []) => {
                 },
             },
         ],
-    };
-
-    if (quickReplies.length > 0) {
-        template.quickReplies = quickReplies;
-    }
-
-    return {
-        version: "2.0",
-        template,
-    };
-};
+    },
+});
 
 export const buildErrorResponse = (message) =>
     buildSimpleTextResponse(

@@ -1,0 +1,192 @@
+@localHost = http://localhost:3000
+@deploymentHost = https://class-alim.vercel.app
+
+### Local Meal (오늘 급식)
+POST {{localHost}}/api/kakao
+Content-Type: application/json
+
+{
+  "intent": { "name": "MealIntent" },
+  "action": {
+    "params": {
+      "skill": "meal",
+      "mealType": "today"
+    }
+  }
+}
+
+### Local Meal (내일 급식)
+POST {{localHost}}/api/kakao
+Content-Type: application/json
+
+{
+  "intent": { "name": "MealIntent" },
+  "action": {
+    "params": {
+      "skill": "meal",
+      "mealType": "tomorrow"
+    }
+  }
+}
+
+### Local Schedule (향후 7일)
+POST {{localHost}}/api/kakao
+Content-Type: application/json
+
+{
+  "intent": { "name": "ScheduleIntent" },
+  "action": {
+    "params": {
+      "skill": "schedule"
+    }
+  }
+}
+
+### Local Timetable (오늘)
+POST {{localHost}}/api/kakao
+Content-Type: application/json
+
+{
+  "intent": { "name": "TimetableIntent" },
+  "action": {
+    "params": {
+      "skill": "timetable",
+      "timetableType": "today"
+    }
+  }
+}
+
+### Local Timetable (내일)
+POST {{localHost}}/api/kakao
+Content-Type: application/json
+
+{
+  "intent": { "name": "TimetableIntent" },
+  "action": {
+    "params": {
+      "skill": "timetable",
+      "timetableType": "tomorrow"
+    }
+  }
+}
+
+### Local Performance Assessments
+POST {{localHost}}/api/kakao
+Content-Type: application/json
+
+{
+  "intent": { "name": "AssessmentIntent" },
+  "action": {
+    "params": {
+      "skill": "assessment"
+    }
+  }
+}
+
+### Local D-Day
+POST {{localHost}}/api/kakao
+Content-Type: application/json
+
+{
+  "intent": { "name": "DdayIntent" },
+  "action": {
+    "params": {
+      "skill": "dday"
+    }
+  }
+}
+
+### Deployed Meal (오늘 급식)
+POST {{deploymentHost}}/api/kakao
+Content-Type: application/json
+
+{
+  "intent": { "name": "MealIntent" },
+  "action": {
+    "params": {
+      "skill": "meal",
+      "mealType": "today"
+    }
+  }
+}
+
+### Deployed Meal (내일 급식)
+POST {{deploymentHost}}/api/kakao
+Content-Type: application/json
+
+{
+  "intent": { "name": "MealIntent" },
+  "action": {
+    "params": {
+      "skill": "meal",
+      "mealType": "tomorrow"
+    }
+  }
+}
+
+### Deployed Schedule (향후 7일)
+POST {{deploymentHost}}/api/kakao
+Content-Type: application/json
+
+{
+  "intent": { "name": "ScheduleIntent" },
+  "action": {
+    "params": {
+      "skill": "schedule"
+    }
+  }
+}
+
+### Deployed Timetable (오늘)
+POST {{deploymentHost}}/api/kakao
+Content-Type: application/json
+
+{
+  "intent": { "name": "TimetableIntent" },
+  "action": {
+    "params": {
+      "skill": "timetable",
+      "timetableType": "today"
+    }
+  }
+}
+
+### Deployed Timetable (내일)
+POST {{deploymentHost}}/api/kakao
+Content-Type: application/json
+
+{
+  "intent": { "name": "TimetableIntent" },
+  "action": {
+    "params": {
+      "skill": "timetable",
+      "timetableType": "tomorrow"
+    }
+  }
+}
+
+### Deployed Performance Assessments
+POST {{deploymentHost}}/api/kakao
+Content-Type: application/json
+
+{
+  "intent": { "name": "AssessmentIntent" },
+  "action": {
+    "params": {
+      "skill": "assessment"
+    }
+  }
+}
+
+### Deployed D-Day
+POST {{deploymentHost}}/api/kakao
+Content-Type: application/json
+
+{
+  "intent": { "name": "DdayIntent" },
+  "action": {
+    "params": {
+      "skill": "dday"
+    }
+  }
+}

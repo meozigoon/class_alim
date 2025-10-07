@@ -222,20 +222,21 @@ const handleSchedule = async (params) => {
             );
         }
 
-        const lines = sameDay
-            .map((schedule) => {
-                const detail = schedule.description
-                    ? `\n  - ${schedule.description}`
-                    : "";
-                const grade = schedule.grade ? ` (${schedule.grade})` : "";
-                return `${schedule.title || "학사 일정"}${grade}${detail}`;
-            })
-            .join("\n\n");
+        const formatScheduleSummary = (schedule) => {
+            const title = schedule.title || "학사 일정";
+            const grade = schedule.grade ? ` (${schedule.grade})` : "";
+            const detail = schedule.description
+                ? ` - ${schedule.description}`
+                : "";
+            return `${title}${grade}${detail}`;
+        };
+
+        const summary = sameDay.map(formatScheduleSummary).join(", ");
 
         return buildSimpleTextResponse(
             `${formatToKoreanShortDate(
                 explicitDate
-            )} 학사 일정입니다.\n\n${lines}`
+            )} 학사 일정입니다.\n\n${summary}`
         );
     }
 
@@ -261,21 +262,35 @@ const handleSchedule = async (params) => {
         );
     }
 
-    const lines = upcomingSchedules
-        .map((schedule) => {
-            const parsedDate = schedule.date
-                ? parseFlexibleDate(schedule.date)
-                : null;
+    const groupedByDate = upcomingSchedules.reduce((acc, schedule) => {
+        if (!schedule.date) {
+            return acc;
+        }
+        if (!acc.has(schedule.date)) {
+            acc.set(schedule.date, []);
+        }
+        acc.get(schedule.date).push(schedule);
+        return acc;
+    }, new Map());
+
+    const lines = Array.from(groupedByDate.entries())
+        .sort(([dateA], [dateB]) => dateA.localeCompare(dateB))
+        .map(([dateKey, items]) => {
+            const parsedDate = parseFlexibleDate(dateKey);
             const displayDate = parsedDate
                 ? formatToKoreanShortDate(parsedDate)
-                : schedule.date;
-            const grade = schedule.grade ? ` (${schedule.grade})` : "";
-            const detail = schedule.description
-                ? `\n  - ${schedule.description}`
-                : "";
-            return `${displayDate} : ${
-                schedule.title || "학사 일정"
-            }${grade}${detail}`;
+                : dateKey;
+            const summaries = items
+                .map((schedule) => {
+                    const title = schedule.title || "학사 일정";
+                    const grade = schedule.grade ? ` (${schedule.grade})` : "";
+                    const detail = schedule.description
+                        ? ` - ${schedule.description}`
+                        : "";
+                    return `${title}${grade}${detail}`;
+                })
+                .join(", ");
+            return `${displayDate} : ${summaries}`;
         })
         .join("\n\n");
 

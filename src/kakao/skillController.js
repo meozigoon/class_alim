@@ -15,7 +15,10 @@ import {
     getKstToday,
     parseFlexibleDate,
 } from "../utils/date.js";
-import { buildSimpleTextResponse } from "./responseBuilder.js";
+import {
+    buildSimpleTextResponse,
+    buildBasicCardCarouselResponse,
+} from "./responseBuilder.js";
 
 const toSnakeCase = (key) =>
     key.replace(/([A-Z])/g, (match) => `_${match.toLowerCase()}`);
@@ -43,32 +46,78 @@ const parseDateParam = (params, candidates = []) => {
     return null;
 };
 
-const formatMealText = (mealTypeText, targetDate, meals) => {
-    if (!meals.length) {
-        return `${formatToKoreanLongDate(targetDate)} 급식 정보가 없습니다.`;
+const MEAL_SECTION_ORDER = [
+    { code: "1", label: "아침", synonyms: ["조식", "아침"] },
+    { code: "2", label: "점심", synonyms: ["중식", "점심"] },
+    { code: "3", label: "석식", synonyms: ["석식", "저녁"] },
+];
+
+const buildMealSectionContent = (meal) => {
+    if (!meal) {
+        return "등록된 메뉴가 없습니다.";
     }
 
-    const sections = meals.map((meal) => {
-        const dishes = meal.dishes
-            .map((dish) => {
-                const allergy = dish.allergyCodes.length
-                    ? ` (알레르기: ${dish.allergyCodes.join(", ")})`
-                    : "";
-                return `• ${dish.name}${allergy}`;
+    const dishes = (meal.dishes ?? [])
+        .map((dish) => {
+            const allergy = dish.allergyCodes.length
+                ? ` (알레르기: ${dish.allergyCodes.join(", ")})`
+                : "";
+            return `• ${dish.name}${allergy}`;
+        })
+        .join("\n");
+
+    const dishesOrFallback = dishes || "• 등록된 메뉴가 없습니다.";
+    const extras = [meal.calorie].filter(Boolean).join("\n");
+
+    return [dishesOrFallback, extras].filter(Boolean).join("\n\n");
+};
+
+const buildMealCards = (meals) => {
+    const remainingMeals = [...meals];
+    const cards = [];
+
+    for (let i = 0; i < MEAL_SECTION_ORDER.length; i += 1) {
+        const section = MEAL_SECTION_ORDER[i];
+        const index = remainingMeals.findIndex((meal) => {
+            const mealCode = meal.mealCode ? String(meal.mealCode) : null;
+            const mealName = (meal.mealName || "").trim();
+            return (
+                (mealCode && mealCode === section.code) ||
+                (mealName && section.synonyms.includes(mealName))
+            );
+        });
+
+        const matchedMeal =
+            index === -1 ? null : remainingMeals.splice(index, 1)[0];
+        const title = `${section.label} 급식`;
+        const description = buildMealSectionContent(matchedMeal);
+
+        cards.push({
+            title,
+            description,
+        });
+    }
+
+    if (remainingMeals.length) {
+        const extras = remainingMeals
+            .map((meal) => {
+                const title = meal.mealName || `기타(${meal.mealCode ?? "?"})`;
+                return [`${title}`, buildMealSectionContent(meal)]
+                    .filter(Boolean)
+                    .join("\n\n");
             })
-            .join("\n");
+            .join("\n\n");
 
-        const extras = [meal.calorie, meal.origin].filter(Boolean).join("\n");
+        const lastIndex = cards.length - 1;
+        if (lastIndex >= 0) {
+            const lastCard = cards[lastIndex];
+            lastCard.description = [lastCard.description, "추가 메뉴", extras]
+                .filter(Boolean)
+                .join("\n\n");
+        }
+    }
 
-        return [`【${meal.mealName}】`, dishes, extras ? `\n${extras}` : null]
-            .filter(Boolean)
-            .join("\n");
-    });
-
-    return [
-        `${mealTypeText} (${formatToKoreanLongDate(targetDate)})`,
-        ...sections,
-    ].join("\n\n");
+    return cards;
 };
 
 const formatTimetableText = (label, targetDate, lessons) => {
@@ -117,8 +166,8 @@ const handleMeal = async (mealType, params) => {
     }
 
     const meals = await getMealsByDate(targetDate);
-    const text = formatMealText(label, targetDate, meals);
-    return buildSimpleTextResponse(text);
+    const cards = buildMealCards(meals);
+    return buildBasicCardCarouselResponse(cards);
 };
 
 const handleTimetable = async (timetableType, params) => {

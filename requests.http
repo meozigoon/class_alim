@@ -38,7 +38,7 @@ Content-Type: application/json
   "action": {
     "params": {
       "skill": "meal",
-      "targetDate": "2025-10-07"
+      "targetDate": "2025-10-22"
     }
   }
 }

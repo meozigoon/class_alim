@@ -90,6 +90,11 @@ const buildMealCards = (meals) => {
         cards.push({
             title,
             description,
+            thumbnail: {
+                imageUrl:
+                    matchedMeal?.thumbnailUrl ||
+                    "https://hssh-info.vercel.app/image/hssh_Logo.png",
+            },
         });
     }
 

@@ -17,7 +17,7 @@ import {
 } from "../utils/date.js";
 import {
     buildSimpleTextResponse,
-    buildSimpleTextsResponse,
+    buildSimpleTextCarouselResponse,
 } from "./responseBuilder.js";
 
 const toSnakeCase = (key) =>
@@ -161,7 +161,7 @@ const handleMeal = async (mealType, params) => {
 
     const meals = await getMealsByDate(targetDate);
     const texts = buildMealTexts(meals);
-    return buildSimpleTextsResponse(texts);
+    return buildSimpleTextCarouselResponse(texts);
 };
 
 const handleTimetable = async (timetableType, params) => {

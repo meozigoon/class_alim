@@ -195,10 +195,13 @@ curl -X POST http://localhost:3000/api/kakao \
     - 급식: `{ "skill": "meal", "mealType": "today" }`
     - 내일 급식: `{ "skill": "meal", "mealType": "tomorrow" }`
     - 알레르기 목록: `{ "skill": "meal", "mealType": "allergy" }`
+    - 특정 날짜 급식: `{ "skill": "meal", "targetDate": "2025-10-07" }`
     - 학사 일정: `{ "skill": "schedule" }` (오늘 포함 7일 학사 일정)
+    - 특정 날짜 학사 일정: `{ "skill": "schedule", "targetDate": "2025-10-07" }`
     - 수행평가 일정: `{ "skill": "assessment" }`
     - 디데이: `{ "skill": "dday" }`
     - 시험 디데이: `{ "skill": "exam" }`
+    - 특정 날짜 시간표: `{ "skill": "timetable", "targetDate": "2025-10-07" }`
 5. 블록의 발화(사용자 입력)에 따라 위 파라미터를 매핑하거나, 커스텀 슬롯을 만들어 연결합니다.
 6. 챗봇 테스트 후 배포 → 카카오톡 채널 연결
 
@@ -222,6 +225,7 @@ curl -X POST http://localhost:3000/api/kakao \
 ## 참고 및 커스터마이징
 
 -   학사 일정 응답은 오늘 포함 향후 7일간의 일정만 표시합니다.
+-   급식/시간표/학사 일정 스킬은 `targetDate` (`mealDate`, `timetableDate`, `scheduleDate`) 파라미터로 특정 날짜를 조회할 수 있습니다.
 -   학사 일정은 `NEIS_SCHEDULE_API_KEY`, 시간표는 `NEIS_TIMETABLE_API_KEY` 값을 사용하여 각기 다른 인증키로 호출합니다.
 -   시간표 조회는 학교급에 따라 `NEIS_TIMETABLE_SERVICE` 값을 `hisTimetable`(고등), `misTimetable`(중등), `elsTimetable`(초등) 등으로 맞춰야 합니다. 기본값 `classTimeTable` 이 맞지 않다면 반드시 변경하세요.
 -   시험 디데이 응답은 `data/examSchedules.json`에 등록한 일정 중 아직 지나지 않은 가장 가까운 시험을 기준으로 합니다.

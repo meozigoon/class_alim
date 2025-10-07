@@ -29,6 +29,20 @@ Content-Type: application/json
   }
 }
 
+### Local Meal (지정 날짜)
+POST {{localHost}}/api/kakao
+Content-Type: application/json
+
+{
+  "intent": { "name": "MealIntent" },
+  "action": {
+    "params": {
+      "skill": "meal",
+      "targetDate": "2025-10-07"
+    }
+  }
+}
+
 ### Local Schedule (향후 7일)
 POST {{localHost}}/api/kakao
 Content-Type: application/json
@@ -38,6 +52,20 @@ Content-Type: application/json
   "action": {
     "params": {
       "skill": "schedule"
+    }
+  }
+}
+
+### Local Schedule (지정 날짜)
+POST {{localHost}}/api/kakao
+Content-Type: application/json
+
+{
+  "intent": { "name": "ScheduleIntent" },
+  "action": {
+    "params": {
+      "skill": "schedule",
+      "targetDate": "2025-10-07"
     }
   }
 }
@@ -52,6 +80,20 @@ Content-Type: application/json
     "params": {
       "skill": "timetable",
       "timetableType": "today"
+    }
+  }
+}
+
+### Local Timetable (지정 날짜)
+POST {{localHost}}/api/kakao
+Content-Type: application/json
+
+{
+  "intent": { "name": "TimetableIntent" },
+  "action": {
+    "params": {
+      "skill": "timetable",
+      "targetDate": "2025-10-07"
     }
   }
 }
@@ -137,6 +179,20 @@ Content-Type: application/json
   }
 }
 
+### Deployed Meal (지정 날짜)
+POST {{deploymentHost}}/api/kakao
+Content-Type: application/json
+
+{
+  "intent": { "name": "MealIntent" },
+  "action": {
+    "params": {
+      "skill": "meal",
+      "targetDate": "2025-10-07"
+    }
+  }
+}
+
 ### Deployed Schedule (향후 7일)
 POST {{deploymentHost}}/api/kakao
 Content-Type: application/json
@@ -146,6 +202,20 @@ Content-Type: application/json
   "action": {
     "params": {
       "skill": "schedule"
+    }
+  }
+}
+
+### Deployed Schedule (지정 날짜)
+POST {{deploymentHost}}/api/kakao
+Content-Type: application/json
+
+{
+  "intent": { "name": "ScheduleIntent" },
+  "action": {
+    "params": {
+      "skill": "schedule",
+      "targetDate": "2025-10-07"
     }
   }
 }
@@ -160,6 +230,20 @@ Content-Type: application/json
     "params": {
       "skill": "timetable",
       "timetableType": "today"
+    }
+  }
+}
+
+### Deployed Timetable (지정 날짜)
+POST {{deploymentHost}}/api/kakao
+Content-Type: application/json
+
+{
+  "intent": { "name": "TimetableIntent" },
+  "action": {
+    "params": {
+      "skill": "timetable",
+      "targetDate": "2025-10-07"
     }
   }
 }

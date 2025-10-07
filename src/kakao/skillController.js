@@ -17,6 +17,32 @@ import {
 } from "../utils/date.js";
 import { buildSimpleTextResponse } from "./responseBuilder.js";
 
+const toSnakeCase = (key) =>
+    key.replace(/([A-Z])/g, (match) => `_${match.toLowerCase()}`);
+
+const getParamValue = (params, key) => {
+    if (!params) {
+        return undefined;
+    }
+    const snakeKey = toSnakeCase(key);
+    return params[key] ?? params[snakeKey];
+};
+
+const parseDateParam = (params, candidates = []) => {
+    for (const key of candidates) {
+        const value = getParamValue(params, key);
+        if (!value) {
+            continue;
+        }
+        const parsed = parseFlexibleDate(value);
+        if (parsed && !Number.isNaN(parsed.getTime())) {
+            parsed.setHours(0, 0, 0, 0);
+            return parsed;
+        }
+    }
+    return null;
+};
+
 const formatMealText = (mealTypeText, targetDate, meals) => {
     if (!meals.length) {
         return `${formatToKoreanLongDate(targetDate)} 급식 정보가 없습니다.`;
@@ -65,7 +91,7 @@ const formatTimetableText = (label, targetDate, lessons) => {
     );
 };
 
-const handleMeal = async (mealType) => {
+const handleMeal = async (mealType, params) => {
     if (mealType === "allergy") {
         const allergyText = getAllergyListText();
         return buildSimpleTextResponse(
@@ -73,30 +99,89 @@ const handleMeal = async (mealType) => {
         );
     }
 
-    const offset = mealType === "tomorrow" ? 1 : 0;
-    const targetDate = getKstDateByOffset(offset);
+    const explicitDate = parseDateParam(params, [
+        "mealDate",
+        "targetDate",
+        "date",
+    ]);
+    let targetDate;
+    let label;
+
+    if (explicitDate) {
+        targetDate = explicitDate;
+        label = "지정일 급식";
+    } else {
+        const offset = mealType === "tomorrow" ? 1 : 0;
+        targetDate = getKstDateByOffset(offset);
+        label = offset === 0 ? "오늘 급식" : "내일 급식";
+    }
+
     const meals = await getMealsByDate(targetDate);
-    const text = formatMealText(
-        offset === 0 ? "오늘 급식" : "내일 급식",
-        targetDate,
-        meals
-    );
+    const text = formatMealText(label, targetDate, meals);
     return buildSimpleTextResponse(text);
 };
 
-const handleTimetable = async (timetableType) => {
-    const offset = timetableType === "tomorrow" ? 1 : 0;
-    const targetDate = getKstDateByOffset(offset);
+const handleTimetable = async (timetableType, params) => {
+    const explicitDate = parseDateParam(params, [
+        "timetableDate",
+        "targetDate",
+        "date",
+    ]);
+    let targetDate;
+    let label;
+
+    if (explicitDate) {
+        targetDate = explicitDate;
+        label = "지정일 시간표";
+    } else {
+        const offset = timetableType === "tomorrow" ? 1 : 0;
+        targetDate = getKstDateByOffset(offset);
+        label = offset === 0 ? "오늘 시간표" : "내일 시간표";
+    }
+
     const lessons = await getClassTimetableByDate(targetDate);
-    const text = formatTimetableText(
-        offset === 0 ? "오늘 시간표" : "내일 시간표",
-        targetDate,
-        lessons
-    );
+    const text = formatTimetableText(label, targetDate, lessons);
     return buildSimpleTextResponse(text);
 };
 
-const handleSchedule = async () => {
+const handleSchedule = async (params) => {
+    const explicitDate = parseDateParam(params, [
+        "scheduleDate",
+        "targetDate",
+        "date",
+    ]);
+    if (explicitDate) {
+        const schedules = await getMonthlySchedule(explicitDate, explicitDate);
+        const targetKey = formatToNeisDate(explicitDate);
+        const sameDay = schedules.filter(
+            (schedule) => schedule.date === targetKey
+        );
+
+        if (!sameDay.length) {
+            return buildSimpleTextResponse(
+                `${formatToKoreanShortDate(
+                    explicitDate
+                )} 학사 일정이 없습니다.`
+            );
+        }
+
+        const lines = sameDay
+            .map((schedule) => {
+                const detail = schedule.description
+                    ? `\n  - ${schedule.description}`
+                    : "";
+                const grade = schedule.grade ? ` (${schedule.grade})` : "";
+                return `${schedule.title || "학사 일정"}${grade}${detail}`;
+            })
+            .join("\n\n");
+
+        return buildSimpleTextResponse(
+            `${formatToKoreanShortDate(
+                explicitDate
+            )} 학사 일정입니다.\n\n${lines}`
+        );
+    }
+
     const today = getKstToday();
     const endDate = getKstDateByOffset(6);
     const startKey = formatToNeisDate(today);
@@ -211,18 +296,20 @@ export const handleSkillRequest = async (body) => {
             return handleMeal(
                 ["today", "tomorrow", "allergy"].includes(mealType)
                     ? mealType
-                    : "today"
+                    : "today",
+                actionParams
             );
         case "timetable":
         case "timetableintent":
             return handleTimetable(
                 ["today", "tomorrow"].includes(timetableType)
                     ? timetableType
-                    : "today"
+                    : "today",
+                actionParams
             );
         case "schedule":
         case "scheduleintent":
-            return handleSchedule();
+            return handleSchedule(actionParams);
         case "assessment":
         case "assessmentintent":
             return handleAssessments();
@@ -235,27 +322,29 @@ export const handleSkillRequest = async (body) => {
             return handleExamDday();
         default:
             if (["today", "tomorrow", "allergy"].includes(mealType)) {
-                return handleMeal(mealType);
+                return handleMeal(mealType, actionParams);
             }
             if (["today", "tomorrow"].includes(timetableType)) {
-                return handleTimetable(timetableType);
+                return handleTimetable(timetableType, actionParams);
             }
             if (intentName.includes("meal")) {
                 return handleMeal(
                     ["today", "tomorrow", "allergy"].includes(mealType)
                         ? mealType
-                        : "today"
+                        : "today",
+                    actionParams
                 );
             }
             if (intentName.includes("timetable")) {
                 return handleTimetable(
                     ["today", "tomorrow"].includes(timetableType)
                         ? timetableType
-                        : "today"
+                        : "today",
+                    actionParams
                 );
             }
             if (intentName.includes("schedule")) {
-                return handleSchedule();
+                return handleSchedule(actionParams);
             }
             if (intentName.includes("assessment")) {
                 return handleAssessments();

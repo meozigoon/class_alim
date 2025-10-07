@@ -17,7 +17,7 @@ import {
 } from "../utils/date.js";
 import {
     buildSimpleTextResponse,
-    buildSimpleTextCarouselResponse,
+    buildBasicCardCarouselResponse,
 } from "./responseBuilder.js";
 
 const toSnakeCase = (key) =>
@@ -67,9 +67,9 @@ const buildMealSectionContent = (meal) => {
     return [dishesOrFallback, extras].filter(Boolean).join("\n\n");
 };
 
-const buildMealTexts = (meals) => {
+const buildMealCards = (meals) => {
     const remainingMeals = [...meals];
-    const texts = [];
+    const cards = [];
 
     for (let i = 0; i < MEAL_SECTION_ORDER.length; i += 1) {
         const section = MEAL_SECTION_ORDER[i];
@@ -87,7 +87,13 @@ const buildMealTexts = (meals) => {
         const title = `${section.label} 급식`;
         const description = buildMealSectionContent(matchedMeal);
 
-        texts.push([title, description].filter(Boolean).join("\n\n"));
+        cards.push({
+            title,
+            description,
+            thumbnail: {
+                imageUrl: matchedMeal?.thumbnailUrl || "",
+            },
+        });
     }
 
     if (remainingMeals.length) {
@@ -100,21 +106,29 @@ const buildMealTexts = (meals) => {
             })
             .join("\n\n");
 
-        const lastIndex = texts.length - 1;
+        const lastIndex = cards.length - 1;
         if (lastIndex >= 0) {
-            texts[lastIndex] = [
-                texts[lastIndex],
+            const lastCard = cards[lastIndex];
+            lastCard.description = [
+                lastCard.description,
                 "추가 메뉴",
                 extras,
             ]
                 .filter(Boolean)
                 .join("\n\n");
         } else {
-            texts.push(["추가 메뉴", extras].filter(Boolean).join("\n\n"));
+            const extrasDescription = extras || "등록된 메뉴가 없습니다.";
+            cards.push({
+                title: "추가 메뉴",
+                description: extrasDescription,
+                thumbnail: {
+                    imageUrl: "",
+                },
+            });
         }
     }
 
-    return texts;
+    return cards;
 };
 
 const formatTimetableText = (label, targetDate, lessons) => {
@@ -160,8 +174,8 @@ const handleMeal = async (mealType, params) => {
     }
 
     const meals = await getMealsByDate(targetDate);
-    const texts = buildMealTexts(meals);
-    return buildSimpleTextCarouselResponse(texts);
+    const cards = buildMealCards(meals);
+    return buildBasicCardCarouselResponse(cards);
 };
 
 const handleTimetable = async (timetableType, params) => {

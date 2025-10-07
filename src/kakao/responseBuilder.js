@@ -22,24 +22,6 @@ export const buildSimpleTextsResponse = (texts) => ({
     },
 });
 
-export const buildSimpleTextCarouselResponse = (texts) => ({
-    version: "2.0",
-    template: {
-        outputs: [
-            {
-                carousel: {
-                    type: "text",
-                    items: texts.map((text) => ({
-                        simpleText: {
-                            text,
-                        },
-                    })),
-                },
-            },
-        ],
-    },
-});
-
 export const buildBasicCardCarouselResponse = (items) => ({
     version: "2.0",
     template: {

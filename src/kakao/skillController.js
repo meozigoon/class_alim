@@ -51,12 +51,7 @@ const formatTimetableText = (label, targetDate, lessons) => {
 
     const lines = lessons
         .map((lesson) => {
-            const extras = [
-                lesson.classroom ? `@${lesson.classroom}` : null,
-                lesson.teacher || null,
-            ]
-                .filter(Boolean)
-                .join(" · ");
+            const extras = [lesson.teacher || null].filter(Boolean).join(" · ");
 
             return `${lesson.period}교시 ${lesson.subject}${
                 extras ? ` (${extras})` : ""

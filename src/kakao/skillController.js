@@ -17,7 +17,7 @@ import {
 } from "../utils/date.js";
 import {
     buildSimpleTextResponse,
-    buildTextCardResponse,
+    buildTextCardCarouselResponse,
 } from "./responseBuilder.js";
 
 const toSnakeCase = (key) =>
@@ -161,41 +161,23 @@ const handleMeal = async (mealType, params) => {
         "date",
     ]);
     let targetDate;
-    let headerTitle;
-    let offset = 0;
 
     if (explicitDate) {
         targetDate = explicitDate;
-        headerTitle = `${formatToKoreanLongDate(targetDate)} 급식`;
     } else {
-        offset = mealType === "tomorrow" ? 1 : 0;
+        const offset = mealType === "tomorrow" ? 1 : 0;
         targetDate = getKstDateByOffset(offset);
-        headerTitle = offset === 0 ? "오늘 급식" : "내일 급식";
     }
 
     const meals = await getMealsByDate(targetDate);
     const cards = buildMealTextCards(meals);
 
-    if (!cards.length) {
-        return buildSimpleTextResponse(
-            `${formatToKoreanLongDate(targetDate)} 급식 정보가 없습니다.`
-        );
-    }
-
-    const headerText = explicitDate
-        ? headerTitle
-        : offset === 0
-        ? headerTitle
-        : `${headerTitle} (${formatToKoreanLongDate(targetDate)})`;
-
-    cards[0] = {
-        ...cards[0],
-        description: [headerText, cards[0].description]
-            .filter(Boolean)
-            .join("\n\n"),
-    };
-
-    return buildTextCardResponse(cards);
+    return buildTextCardCarouselResponse(cards.length ? cards : [
+        {
+            title: "급식 정보",
+            description: "등록된 메뉴가 없습니다.",
+        },
+    ]);
 };
 
 const handleTimetable = async (timetableType, params) => {

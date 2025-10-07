@@ -36,16 +36,21 @@ export const buildBasicCardCarouselResponse = (items) => ({
     },
 });
 
-export const buildTextCardResponse = (cards) => ({
+export const buildTextCardCarouselResponse = (cards) => ({
     version: "2.0",
     template: {
-        outputs: cards.map((card) => ({
-            textCard: {
-                title: card.title || "",
-                description: card.description || "",
-                buttons: card.buttons || [],
+        outputs: [
+            {
+                carousel: {
+                    type: "textCard",
+                    items: cards.map((card) => ({
+                        title: card.title || "",
+                        description: card.description || "",
+                        buttons: card.buttons || [],
+                    })),
+                },
             },
-        })),
+        ],
     },
 });
 

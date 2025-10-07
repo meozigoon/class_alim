@@ -153,20 +153,31 @@ const handleMeal = async (mealType, params) => {
         "targetDate",
         "date",
     ]);
-    let targetDate;
-    let label;
+    let baseDate;
+    let referenceLabel;
 
     if (explicitDate) {
-        targetDate = explicitDate;
-        label = "급식";
+        baseDate = explicitDate;
+        referenceLabel = "선택한 날짜";
     } else {
         const offset = mealType === "tomorrow" ? 1 : 0;
-        targetDate = getKstDateByOffset(offset);
-        label = offset === 0 ? "오늘 급식" : "내일 급식";
+        baseDate = getKstDateByOffset(offset);
+        referenceLabel = offset === 0 ? "오늘" : "내일";
     }
+
+    const targetDate = new Date(baseDate.getTime());
+    targetDate.setDate(targetDate.getDate() + 7);
 
     const meals = await getMealsByDate(targetDate);
     const cards = buildMealCards(meals);
+    if (cards.length) {
+        cards[0].description = [
+            `${referenceLabel} 기준 7일 후 급식입니다.`,
+            cards[0].description,
+        ]
+            .filter(Boolean)
+            .join("\n\n");
+    }
     return buildBasicCardCarouselResponse(cards);
 };
 

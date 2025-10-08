@@ -38,7 +38,7 @@ Content-Type: application/json
   "action": {
     "params": {
       "skill": "meal",
-      "targetDate": "2025-10-01"
+      "targetDate": "2025-10-20"
     }
   }
 }
@@ -65,7 +65,7 @@ Content-Type: application/json
   "action": {
     "params": {
       "skill": "schedule",
-      "targetDate": "2025-10-07"
+      "targetDate": "2025-10-20"
     }
   }
 }
@@ -188,7 +188,7 @@ Content-Type: application/json
   "action": {
     "params": {
       "skill": "meal",
-      "targetDate": "2025-10-07"
+      "targetDate": "2025-10-20"
     }
   }
 }
@@ -215,7 +215,7 @@ Content-Type: application/json
   "action": {
     "params": {
       "skill": "schedule",
-      "targetDate": "2025-10-07"
+      "targetDate": "2025-10-20"
     }
   }
 }
@@ -243,7 +243,7 @@ Content-Type: application/json
   "action": {
     "params": {
       "skill": "timetable",
-      "targetDate": "2025-10-07"
+      "date": "2025-10-20"
     }
   }
 }

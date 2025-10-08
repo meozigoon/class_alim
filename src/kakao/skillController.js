@@ -23,17 +23,80 @@ import {
 const toSnakeCase = (key) =>
     key.replace(/([A-Z])/g, (match) => `_${match.toLowerCase()}`);
 
+const unwrapParamValue = (value) => {
+    if (value === null || value === undefined) {
+        return undefined;
+    }
+    if (typeof value !== "object") {
+        return value;
+    }
+    if (value instanceof Date) {
+        return value;
+    }
+    if (Array.isArray(value)) {
+        for (const item of value) {
+            const unwrapped = unwrapParamValue(item);
+            if (unwrapped !== undefined) {
+                return unwrapped;
+            }
+        }
+        return undefined;
+    }
+
+    const candidateKeys = [
+        "value",
+        "origin",
+        "resolved",
+        "text",
+        "label",
+        "date",
+    ];
+    for (const key of candidateKeys) {
+        if (key in value) {
+            const unwrapped = unwrapParamValue(value[key]);
+            if (unwrapped !== undefined) {
+                return unwrapped;
+            }
+        }
+    }
+
+    const year =
+        value.year ?? value.yyyy ?? value.YYYY ?? value.Year ?? value.YY;
+    const month = value.month ?? value.mm ?? value.MM ?? value.Month ?? value.M;
+    const day = value.day ?? value.dd ?? value.DD ?? value.Day ?? value.D;
+    if (year && month && day) {
+        const normalizedMonth = String(month).padStart(2, "0");
+        const normalizedDay = String(day).padStart(2, "0");
+        return `${year}-${normalizedMonth}-${normalizedDay}`;
+    }
+
+    return undefined;
+};
+
 const getParamValue = (params, key) => {
     if (!params) {
         return undefined;
     }
     const snakeKey = toSnakeCase(key);
-    return params[key] ?? params[snakeKey];
+    const raw = params[key] ?? params[snakeKey];
+    return unwrapParamValue(raw);
+};
+
+const getParamValueFromSources = (sources, key) => {
+    const list = Array.isArray(sources) ? sources : [sources];
+    for (const source of list) {
+        const value = getParamValue(source, key);
+        if (value !== undefined) {
+            return value;
+        }
+    }
+    return undefined;
 };
 
 const parseDateParam = (params, candidates = []) => {
+    const sources = Array.isArray(params) ? params : [params];
     for (const key of candidates) {
-        const value = getParamValue(params, key);
+        const value = getParamValueFromSources(sources, key);
         if (!value) {
             continue;
         }
@@ -343,22 +406,30 @@ const DEFAULT_HANDLER = () =>
 
 export const handleSkillRequest = async (body) => {
     const actionParams = body?.action?.params ?? {};
-    const mealType = (
-        actionParams.mealType ||
-        actionParams["meal_type"] ||
-        ""
-    ).toLowerCase();
-    const timetableType = (
-        actionParams.timetableType ||
-        actionParams["timetable_type"] ||
-        ""
-    ).toLowerCase();
+    const detailParams = body?.action?.detailParams ?? {};
+    const paramSources = [actionParams, detailParams];
+    const mealTypeSource = getParamValueFromSources(paramSources, "mealType");
+    const mealType =
+        typeof mealTypeSource === "string"
+            ? mealTypeSource.toLowerCase()
+            : String(mealTypeSource ?? "").toLowerCase();
+    const timetableTypeSource = getParamValueFromSources(
+        paramSources,
+        "timetableType"
+    );
+    const timetableType =
+        typeof timetableTypeSource === "string"
+            ? timetableTypeSource.toLowerCase()
+            : String(timetableTypeSource ?? "").toLowerCase();
     const intentName = (body?.intent?.name ?? "").toLowerCase();
-    const skillType = (
-        actionParams.skill ||
-        actionParams["skill_type"] ||
-        intentName
-    ).toLowerCase();
+    const skillTypeSource =
+        getParamValueFromSources(paramSources, "skill") ??
+        getParamValueFromSources(paramSources, "skillType") ??
+        intentName;
+    const skillType =
+        typeof skillTypeSource === "string"
+            ? skillTypeSource.toLowerCase()
+            : String(skillTypeSource ?? "").toLowerCase();
 
     switch (skillType) {
         case "meal":
@@ -367,7 +438,7 @@ export const handleSkillRequest = async (body) => {
                 ["today", "tomorrow", "allergy"].includes(mealType)
                     ? mealType
                     : "today",
-                actionParams
+                paramSources
             );
         case "timetable":
         case "timetableintent":
@@ -375,11 +446,11 @@ export const handleSkillRequest = async (body) => {
                 ["today", "tomorrow"].includes(timetableType)
                     ? timetableType
                     : "today",
-                actionParams
+                paramSources
             );
         case "schedule":
         case "scheduleintent":
-            return handleSchedule(actionParams);
+            return handleSchedule(paramSources);
         case "assessment":
         case "assessmentintent":
             return handleAssessments();
@@ -392,17 +463,17 @@ export const handleSkillRequest = async (body) => {
             return handleExamDday();
         default:
             if (["today", "tomorrow", "allergy"].includes(mealType)) {
-                return handleMeal(mealType, actionParams);
+                return handleMeal(mealType, paramSources);
             }
             if (["today", "tomorrow"].includes(timetableType)) {
-                return handleTimetable(timetableType, actionParams);
+                return handleTimetable(timetableType, paramSources);
             }
             if (intentName.includes("meal")) {
                 return handleMeal(
                     ["today", "tomorrow", "allergy"].includes(mealType)
                         ? mealType
                         : "today",
-                    actionParams
+                    paramSources
                 );
             }
             if (intentName.includes("timetable")) {
@@ -410,11 +481,11 @@ export const handleSkillRequest = async (body) => {
                     ["today", "tomorrow"].includes(timetableType)
                         ? timetableType
                         : "today",
-                    actionParams
+                    paramSources
                 );
             }
             if (intentName.includes("schedule")) {
-                return handleSchedule(actionParams);
+                return handleSchedule(paramSources);
             }
             if (intentName.includes("assessment")) {
                 return handleAssessments();

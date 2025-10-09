@@ -60,10 +60,26 @@ const unwrapParamValue = (value) => {
         }
     }
 
-    const year =
-        value.year ?? value.yyyy ?? value.YYYY ?? value.Year ?? value.YY;
-    const month = value.month ?? value.mm ?? value.MM ?? value.Month ?? value.M;
-    const day = value.day ?? value.dd ?? value.DD ?? value.Day ?? value.D;
+    const extractDigits = (part) => {
+        if (part === null || part === undefined) {
+            return null;
+        }
+        if (typeof part === "number" && Number.isFinite(part)) {
+            return String(part);
+        }
+        const match = String(part).match(/\d+/);
+        return match ? match[0] : null;
+    };
+
+    const year = extractDigits(
+        value.year ?? value.yyyy ?? value.YYYY ?? value.Year ?? value.YY
+    );
+    const month = extractDigits(
+        value.month ?? value.mm ?? value.MM ?? value.Month ?? value.M
+    );
+    const day = extractDigits(
+        value.day ?? value.dd ?? value.DD ?? value.Day ?? value.D
+    );
     if (year && month && day) {
         const normalizedMonth = String(month).padStart(2, "0");
         const normalizedDay = String(day).padStart(2, "0");

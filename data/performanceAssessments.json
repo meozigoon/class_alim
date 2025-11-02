@@ -40,5 +40,17 @@
         "subject": "",
         "date": "2025-11-12",
         "description": "유레카 탐구대회 11월 10일"
+    },
+    {
+        "title": "영어 쓰기 수행",
+        "subject": "영어A(윤은경T)",
+        "date": "2025-11-04",
+        "description": "First Draft 제출, Final Draft는 구글 문서에 작성, 발표 전까지 수정 가능"
+    },
+    {
+        "title": "영어 말하기 수행",
+        "subject": "영어A(윤은경T)",
+        "date": "2025-11-07",
+        "description": "원고 암기, Que Card 준비하기"
     }
 ]

@@ -6,6 +6,7 @@ import {
     sortByDate,
     formatToIsoDate,
     formatToKoreanShortDate,
+    getKstToday,
 } from "../utils/date.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -109,5 +110,13 @@ export const getPerformanceAssessments = async () => {
     }
 
     const normalized = items.map(normalizeRecord).filter(Boolean);
-    return sortByDate(normalized, (item) => new Date(item.date));
+    const today = formatToIsoDate(getKstToday());
+    const filtered = normalized.filter((item) => {
+        if (item.dateType === "range" && item.endDate) {
+            return item.endDate >= today;
+        }
+        return item.date >= today;
+    });
+
+    return sortByDate(filtered, (item) => new Date(item.date));
 };

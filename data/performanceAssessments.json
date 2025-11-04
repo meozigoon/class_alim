@@ -64,5 +64,17 @@
         "subject": "통합사회2A(박정서T)",
         "date": "2025-11-07",
         "description": "클래스룸에 모둠장이 제출"
+    },
+    {
+        "title": "수학 독서 발표",
+        "subject": "미적분1B(김성두T)",
+        "date": "",
+        "description": "보고서 작성 및 발표"
+    },
+    {
+        "title": "수학 진로 발표",
+        "subject": "미적분1B(김성두T)",
+        "date": "",
+        "description": "본인 진로 관련 수학 내용"
     }
 ]
